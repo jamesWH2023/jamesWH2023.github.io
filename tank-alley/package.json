@@ -1,0 +1,10 @@
+{
+  "name": "tank-alley",
+  "version": "0.1.0",
+  "private": true,
+  "description": "3D tank alley-combat (巷战) browser prototype",
+  "scripts": {
+    "start": "npx --yes serve -l 5173 .",
+    "serve": "npx --yes serve -l 5173 ."
+  }
+}
