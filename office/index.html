@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Office · jamesWH</title>
+  <meta name="description" content="A visual agent office for jamesWH — create custom agents, assign complex tasks, watch them work." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/office.css" />
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true">
+    <div class="sky"></div>
+    <div class="window-glow"></div>
+    <div class="dust"></div>
+  </div>
+
+  <header class="topbar">
+    <a class="brand-mark" href="#floor" aria-label="Agent Office home">
+      <span class="brand-glyph" aria-hidden="true"></span>
+      <span class="brand-text">Agent Office</span>
+    </a>
+    <nav class="topnav" aria-label="Primary">
+      <button type="button" class="nav-btn" data-open="agents">Agents</button>
+      <button type="button" class="nav-btn" data-open="task">Assign task</button>
+      <button type="button" class="nav-btn ghost" data-open="guide">How it works</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">jamesWH · personal loft</p>
+        <h1 class="brand-hero">Agent Office</h1>
+        <p class="lede">
+          A copper-lit loft where your custom agents sit at desks, take complex briefs, and show their work in the room.
+        </p>
+        <div class="cta-row">
+          <button type="button" class="btn primary" data-open="agents">Hire an agent</button>
+          <button type="button" class="btn secondary" data-scroll="floor">Enter the floor</button>
+        </div>
+      </div>
+      <div class="hero-stage" aria-hidden="true">
+        <div class="loft-silhouette">
+          <div class="beam"></div>
+          <div class="desk-block d1"></div>
+          <div class="desk-block d2"></div>
+          <div class="lamp"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="floor-section" id="floor" aria-labelledby="floor-title">
+      <div class="section-head">
+        <div>
+          <h2 id="floor-title">The floor</h2>
+          <p>Stations light up when agents are thinking. Click a desk to inspect.</p>
+        </div>
+        <div class="floor-stats" id="floor-stats" aria-live="polite"></div>
+      </div>
+
+      <div class="office-shell">
+        <div class="office-floor" id="office-floor" role="list" aria-label="Agent stations">
+          <!-- stations rendered by JS -->
+        </div>
+        <aside class="inspector" id="inspector" hidden>
+          <button type="button" class="inspector-close" id="inspector-close" aria-label="Close inspector">×</button>
+          <div id="inspector-body"></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="board-section" id="board" aria-labelledby="board-title">
+      <div class="section-head">
+        <div>
+          <h2 id="board-title">Task board</h2>
+          <p>Complex work assigned across one or more agents.</p>
+        </div>
+        <button type="button" class="btn secondary" data-open="task">New task</button>
+      </div>
+      <div class="task-board" id="task-board"></div>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <p>
+      Prototype runner with clear hooks for real Cursor / Agent SDK wiring — see
+      <button type="button" class="linkish" data-open="guide">How it works</button>
+      or <a href="README.md">office/README.md</a>.
+    </p>
+  </footer>
+
+  <!-- Panels -->
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <aside class="drawer" id="drawer-agents" hidden aria-labelledby="agents-drawer-title">
+    <header class="drawer-head">
+      <h2 id="agents-drawer-title">Agents</h2>
+      <button type="button" class="drawer-close" data-close aria-label="Close">×</button>
+    </header>
+    <div class="drawer-body">
+      <form id="agent-form" class="stack-form">
+        <input type="hidden" id="agent-id" />
+        <label>
+          Name
+          <input type="text" id="agent-name" name="name" required maxlength="48" placeholder="e.g. Cartographer" />
+        </label>
+        <label>
+          Role / brief
+          <input type="text" id="agent-role" name="role" required maxlength="80" placeholder="Maps research into clear plans" />
+        </label>
+        <label>
+          Capabilities / instructions
+          <textarea id="agent-instructions" name="instructions" rows="4" required maxlength="1200" placeholder="What this agent is good at, how it should work…"></textarea>
+        </label>
+        <label>
+          Desk accent
+          <select id="agent-accent" name="accent">
+            <option value="copper">Copper</option>
+            <option value="verdigris">Verdigris</option>
+            <option value="slate">Slate</option>
+            <option value="clay">Clay</option>
+            <option value="ink">Ink</option>
+          </select>
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn primary" id="agent-submit">Save agent</button>
+          <button type="button" class="btn ghost" id="agent-reset">Clear form</button>
+        </div>
+      </form>
+      <ul class="agent-list" id="agent-list"></ul>
+    </div>
+  </aside>
+
+  <aside class="drawer" id="drawer-task" hidden aria-labelledby="task-drawer-title">
+    <header class="drawer-head">
+      <h2 id="task-drawer-title">Assign a task</h2>
+      <button type="button" class="drawer-close" data-close aria-label="Close">×</button>
+    </header>
+    <div class="drawer-body">
+      <form id="task-form" class="stack-form">
+        <label>
+          Title
+          <input type="text" id="task-title" name="title" required maxlength="100" placeholder="Ship a landing page audit" />
+        </label>
+        <label>
+          Brief
+          <textarea id="task-brief" name="brief" rows="5" required maxlength="2000" placeholder="Describe the complex work. Break it into what success looks like…"></textarea>
+        </label>
+        <fieldset class="assignee-field">
+          <legend>Assign to</legend>
+          <div id="assignee-checks" class="check-grid"></div>
+        </fieldset>
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Start work</button>
+        </div>
+      </form>
+    </div>
+  </aside>
+
+  <aside class="drawer" id="drawer-guide" hidden aria-labelledby="guide-drawer-title">
+    <header class="drawer-head">
+      <h2 id="guide-drawer-title">How it works</h2>
+      <button type="button" class="drawer-close" data-close aria-label="Close">×</button>
+    </header>
+    <div class="drawer-body prose">
+      <h3>Add agents</h3>
+      <p>Open <strong>Agents</strong>, fill name, role, and instructions, pick a desk accent, then save. Agents persist in <code>localStorage</code> under <code>agent-office:v1</code>.</p>
+      <h3>Assign tasks</h3>
+      <p>Open <strong>Assign task</strong>, write a brief, select one or more agents, and start. The prototype runner advances status through queued → researching → drafting → reviewing → done, with progress shown on desks and the task board.</p>
+      <h3>Wire real agents next</h3>
+      <p>Replace the simulated runner in <code>js/runner.js</code>. The <code>AgentRunner</code> interface accepts a task + agent profiles and emits progress events. Point it at Cursor Agent SDK / your backend — see <a href="README.md">office/README.md</a>.</p>
+    </div>
+  </aside>
+
+  <div class="toast-region" id="toasts" aria-live="polite"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
