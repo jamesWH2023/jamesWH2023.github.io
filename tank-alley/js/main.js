@@ -49,16 +49,17 @@ function initThree() {
   renderer.toneMappingExposure = 1.05;
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0e1620);
-  scene.fog = new THREE.FogExp2(0x121c26, 0.018);
+  scene.background = new THREE.Color(0x101820);
+  scene.fog = new THREE.FogExp2(0x141e28, 0.015);
 
   camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 200);
 
-  const hemi = new THREE.HemisphereLight(0x9eb6c8, 0x2a2218, 0.55);
+  // Slightly brighter so upgraded tank/building silhouettes read clearly
+  const hemi = new THREE.HemisphereLight(0xb0c4d4, 0x2c241c, 0.7);
   scene.add(hemi);
 
-  const sun = new THREE.DirectionalLight(0xdde6ef, 1.05);
-  sun.position.set(-30, 45, 18);
+  const sun = new THREE.DirectionalLight(0xe8eef4, 1.2);
+  sun.position.set(-28, 48, 16);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.camera.near = 5;
@@ -70,8 +71,8 @@ function initThree() {
   sun.shadow.bias = -0.0008;
   scene.add(sun);
 
-  const fill = new THREE.DirectionalLight(0x4a6a80, 0.25);
-  fill.position.set(20, 10, -25);
+  const fill = new THREE.DirectionalLight(0x5a7a92, 0.35);
+  fill.position.set(22, 12, -24);
   scene.add(fill);
 
   projectiles = new ProjectileManager(scene);

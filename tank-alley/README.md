@@ -44,6 +44,10 @@ On GitHub Pages, open `/tank-alley/` on the published site.
 
 Destroy all enemy tanks without losing your own. Buildings block movement and shells.
 
+## Visuals
+
+Tanks use multi-part meshes (tracks/wheels, glacis, faceted turret, muzzle brake). The alley adds sidewalks, lit/dark windows, awnings, dumpsters, barriers, and street-lamp arms — collider footprints stay simple for performance.
+
 ## Tech
 
 - Three.js (ES module via CDN)
