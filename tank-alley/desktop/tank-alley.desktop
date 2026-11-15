@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Tank Alley
+GenericName=Alley Combat
+Comment=WWII-inspired 3D tank alley combat
+# After copying to ~/Desktop, set Icon= to the absolute path of icons/tank-alley-512.png
+# and Exec= to: bash "/ABS/PATH/tank-alley/desktop/launch-tank-alley.sh"
+Exec=bash -c 'DIR="$(dirname "$(readlink -f "%k")")"; bash "$DIR/launch-tank-alley.sh"'
+Icon=tank-alley
+Terminal=false
+Categories=Game;ActionGame;
+StartupNotify=true

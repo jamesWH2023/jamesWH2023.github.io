@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tank Alley · 巷战</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <div id="overlay">
+    <div id="crosshair"></div>
+    <div id="toast">Click to lock mouse aim</div>
+    <div id="pause-hint">Esc · pause</div>
+
+    <div id="hud">
+      <div class="hud-block">
+        <div class="hud-label">Armor · <span id="tank-type-label">M4 Sherman</span></div>
+        <div class="bar"><span id="health-fill"></span></div>
+        <div class="hud-meta" id="health-text">100 / 100</div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">Cannon</div>
+        <div class="bar"><span id="reload-fill"></span></div>
+        <div class="hud-meta" id="ammo-text" class="ready">Ready</div>
+      </div>
+      <div class="hud-block" id="enemy-count">
+        <div class="hud-label">Hostiles</div>
+        <strong id="enemy-alive">0</strong>
+        remaining
+      </div>
+    </div>
+
+    <div id="title-screen" class="screen">
+      <div class="panel">
+        <div class="eyebrow">WWII-inspired · Alley Combat</div>
+        <h1>TANK ALLEY</h1>
+        <p>Command an M4 Sherman through narrow urban lanes. Face Pz.IV, T-34, Tiger, and Stuart silhouettes. Walls stop shells.</p>
+        <div class="controls">
+          <div><code>WASD</code> / arrows — drive &amp; turn</div>
+          <div><code>Q</code> <code>E</code> or mouse — aim turret</div>
+          <div><code>Space</code> / click — fire</div>
+          <div><code>R</code> — restart after win / lose</div>
+        </div>
+        <button class="btn" id="btn-start" type="button">Enter the alleys</button>
+      </div>
+    </div>
+
+    <div id="pause-screen" class="screen hidden">
+      <div class="panel">
+        <div class="eyebrow">Paused</div>
+        <h1>HOLD</h1>
+        <p>Press Esc again or resume to continue the fight.</p>
+        <button class="btn" id="btn-resume" type="button">Resume</button>
+      </div>
+    </div>
+
+    <div id="end-screen" class="screen hidden">
+      <div class="panel">
+        <div class="eyebrow" id="end-eyebrow">Mission</div>
+        <h1 id="end-title">Victory</h1>
+        <p id="end-message">All enemy tanks destroyed.</p>
+        <button class="btn" id="btn-restart" type="button">Fight again</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
