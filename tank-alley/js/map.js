@@ -164,27 +164,27 @@ export function createAlleyMap(scene) {
     });
   }
 
-  function addFacadeWindows(x, z, w, d, h, wallMat) {
-    const floors = Math.max(1, Math.floor((h - 1.2) / 2.8));
-    const colsX = Math.max(1, Math.floor(w / 2.6));
-    const colsZ = Math.max(1, Math.floor(d / 2.6));
+  function addFacadeWindows(x, z, w, d, h) {
+    // Cap columns so long boundary walls don't explode draw calls
+    const floors = Math.min(3, Math.max(1, Math.floor((h - 1.2) / 2.8)));
+    const colsX = Math.min(4, Math.max(1, Math.floor(w / 3.2)));
+    const colsZ = Math.min(4, Math.max(1, Math.floor(d / 3.2)));
+    if (w > 40 || d > 40) return; // skip window spam on outer ring walls
 
     for (let f = 0; f < floors; f++) {
       const wy = 1.55 + f * 2.75;
       if (wy > h - 0.9) break;
 
-      // X-facing facades
       for (let c = 0; c < colsZ; c++) {
-        const wz = z - d / 2 + 1.3 + c * (d / colsZ);
+        const wz = z - d / 2 + (d * (c + 0.5)) / colsZ;
         for (const side of [-1, 1]) {
           const wx = x + side * (w / 2 + 0.04);
           const lit = ((f + c + side + buildings.length) % 3) !== 0;
-          const frame = addMesh(new THREE.BoxGeometry(0.08, 1.55, 1.2), frameMat, wx, wy, wz, {
+          addMesh(new THREE.BoxGeometry(0.06, 1.45, 1.05), frameMat, wx, wy, wz, {
             ry: side > 0 ? Math.PI / 2 : -Math.PI / 2,
           });
-          void frame;
           addMesh(
-            new THREE.PlaneGeometry(1.0, 1.3),
+            new THREE.PlaneGeometry(0.9, 1.2),
             lit ? winLitMat : winDarkMat,
             wx + side * 0.03,
             wy,
@@ -194,15 +194,14 @@ export function createAlleyMap(scene) {
         }
       }
 
-      // Z-facing facades
       for (let c = 0; c < colsX; c++) {
-        const wx = x - w / 2 + 1.3 + c * (w / colsX);
+        const wx = x - w / 2 + (w * (c + 0.5)) / colsX;
         for (const side of [-1, 1]) {
           const wz = z + side * (d / 2 + 0.04);
           const lit = ((f + c + buildings.length) % 4) !== 1;
-          addMesh(new THREE.BoxGeometry(1.2, 1.55, 0.08), frameMat, wx, wy, wz);
+          addMesh(new THREE.BoxGeometry(1.05, 1.45, 0.06), frameMat, wx, wy, wz);
           addMesh(
-            new THREE.PlaneGeometry(1.0, 1.3),
+            new THREE.PlaneGeometry(0.9, 1.2),
             lit ? winLitMat : winDarkMat,
             wx,
             wy,
@@ -218,6 +217,7 @@ export function createAlleyMap(scene) {
     const wallMat = brickMats[buildings.length % brickMats.length];
     const plaster = plasterMats[buildings.length % plasterMats.length];
     const variant = buildings.length % 3;
+    const isOuter = w > 40 || d > 40;
 
     // Main volume
     addMesh(new THREE.BoxGeometry(w, h, d), wallMat, x, h / 2, z);
@@ -226,25 +226,29 @@ export function createAlleyMap(scene) {
     addMesh(new THREE.BoxGeometry(w + 0.15, 0.55, d + 0.15), ledgeMat, x, 0.28, z);
 
     // Mid ledge
-    if (h > 6) {
+    if (h > 6 && !isOuter) {
       addMesh(new THREE.BoxGeometry(w + 0.2, 0.18, d + 0.2), ledgeMat, x, h * 0.45, z);
     }
 
     // Roof parapet + deck
     addMesh(new THREE.BoxGeometry(w + 0.35, 0.28, d + 0.35), roofMat, x, h + 0.08, z);
-    addMesh(new THREE.BoxGeometry(w - 0.4, 0.12, d - 0.4), ledgeMat, x, h + 0.22, z);
+    if (!isOuter) {
+      addMesh(new THREE.BoxGeometry(Math.max(1, w - 0.4), 0.12, Math.max(1, d - 0.4)), ledgeMat, x, h + 0.22, z);
+    }
 
     // Rooftop AC / vents (cheap urban silhouette)
-    const acCount = 1 + (buildings.length % 2);
-    for (let i = 0; i < acCount; i++) {
-      const ax = x + (i - 0.3) * Math.min(2.2, w * 0.25);
-      const az = z + ((buildings.length + i) % 2 === 0 ? 0.6 : -0.5);
-      addMesh(new THREE.BoxGeometry(1.1, 0.7, 0.9), acMat, ax, h + 0.55, az);
-      addMesh(new THREE.CylinderGeometry(0.18, 0.18, 0.35, 8), metalPropMat, ax, h + 1.05, az);
+    if (!isOuter) {
+      const acCount = 1 + (buildings.length % 2);
+      for (let i = 0; i < acCount; i++) {
+        const ax = x + (i - 0.3) * Math.min(2.2, w * 0.25);
+        const az = z + ((buildings.length + i) % 2 === 0 ? 0.6 : -0.5);
+        addMesh(new THREE.BoxGeometry(1.1, 0.7, 0.9), acMat, ax, h + 0.55, az);
+        addMesh(new THREE.CylinderGeometry(0.18, 0.18, 0.35, 8), metalPropMat, ax, h + 1.05, az);
+      }
     }
 
     // Chimney on some buildings
-    if (variant !== 1) {
+    if (!isOuter && variant !== 1) {
       addMesh(
         new THREE.BoxGeometry(0.55, 1.4, 0.55),
         ledgeMat,
@@ -254,76 +258,78 @@ export function createAlleyMap(scene) {
       );
     }
 
-    addFacadeWindows(x, z, w, d, h, wallMat);
+    addFacadeWindows(x, z, w, d, h);
 
-    // Ground-floor shop / door accents facing alley (toward x=0 when possible)
-    const faceTowardAlley = Math.abs(x) > 3;
-    if (faceTowardAlley) {
-      const side = x > 0 ? -1 : 1;
-      const fx = x + side * (w / 2 + 0.05);
-      // Door
-      addMesh(new THREE.BoxGeometry(0.08, 2.1, 1.0), doorMat, fx, 1.05, z, {
-        ry: side > 0 ? Math.PI / 2 : -Math.PI / 2,
-      });
-      // Awning
-      if (variant !== 2) {
-        addMesh(new THREE.BoxGeometry(0.9, 0.08, Math.min(3.2, d * 0.55)), awningMat, fx + side * 0.4, 2.35, z, {
+    if (!isOuter) {
+      // Ground-floor shop / door accents facing alley (toward x=0 when possible)
+      const faceTowardAlley = Math.abs(x) > 3;
+      if (faceTowardAlley) {
+        const side = x > 0 ? -1 : 1;
+        const fx = x + side * (w / 2 + 0.05);
+        addMesh(new THREE.BoxGeometry(0.08, 2.1, 1.0), doorMat, fx, 1.05, z, {
           ry: side > 0 ? Math.PI / 2 : -Math.PI / 2,
         });
+        if (variant !== 2) {
+          addMesh(
+            new THREE.BoxGeometry(0.9, 0.08, Math.min(3.2, d * 0.55)),
+            awningMat,
+            fx + side * 0.4,
+            2.35,
+            z,
+            { ry: side > 0 ? Math.PI / 2 : -Math.PI / 2 }
+          );
+        }
+        addMesh(new THREE.BoxGeometry(0.1, 0.55, 1.6), signMat, fx + side * 0.08, 3.1, z + 0.2, {
+          ry: side > 0 ? Math.PI / 2 : -Math.PI / 2,
+        });
+      } else {
+        addMesh(new THREE.BoxGeometry(1.0, 2.1, 0.08), doorMat, x, 1.05, z - d / 2 - 0.04);
       }
-      // Signboard
-      addMesh(new THREE.BoxGeometry(0.1, 0.55, 1.6), signMat, fx + side * 0.08, 3.1, z + 0.2, {
-        ry: side > 0 ? Math.PI / 2 : -Math.PI / 2,
-      });
-    } else {
-      // Mid-block doors on Z faces
-      addMesh(new THREE.BoxGeometry(1.0, 2.1, 0.08), doorMat, x, 1.05, z - d / 2 - 0.04);
-    }
 
-    // Corner pipes / gutters
-    for (const sx of [-1, 1]) {
-      for (const sz of [-1, 1]) {
-        if ((sx + sz + buildings.length) % 2 !== 0) continue;
+      // Corner pipes / gutters
+      for (const sx of [-1, 1]) {
+        for (const sz of [-1, 1]) {
+          if ((sx + sz + buildings.length) % 2 !== 0) continue;
+          addMesh(
+            new THREE.CylinderGeometry(0.07, 0.07, h * 0.85, 6),
+            metalPropMat,
+            x + sx * (w / 2 - 0.15),
+            h * 0.42,
+            z + sz * (d / 2 - 0.15)
+          );
+        }
+      }
+
+      // Balcony slabs on taller buildings
+      if (h >= 9 && w >= 10) {
+        const side = x >= 0 ? -1 : 1;
         addMesh(
-          new THREE.CylinderGeometry(0.07, 0.07, h * 0.85, 6),
-          metalPropMat,
-          x + sx * (w / 2 - 0.15),
-          h * 0.42,
-          z + sz * (d / 2 - 0.15)
+          new THREE.BoxGeometry(0.7, 0.1, 2.2),
+          ledgeMat,
+          x + side * (w / 2 + 0.25),
+          4.2,
+          z,
+          { ry: Math.PI / 2 }
+        );
+        addMesh(
+          new THREE.BoxGeometry(0.08, 0.7, 2.2),
+          frameMat,
+          x + side * (w / 2 + 0.55),
+          4.55,
+          z,
+          { ry: Math.PI / 2 }
         );
       }
-    }
 
-    // Balcony slabs on taller buildings
-    if (h >= 9 && w >= 10) {
-      const side = x >= 0 ? -1 : 1;
-      addMesh(
-        new THREE.BoxGeometry(0.7, 0.1, 2.2),
-        ledgeMat,
-        x + side * (w / 2 + 0.25),
-        4.2,
-        z,
-        { ry: Math.PI / 2 }
-      );
-      addMesh(
-        new THREE.BoxGeometry(0.08, 0.7, 2.2),
-        frameMat,
-        x + side * (w / 2 + 0.55),
-        4.55,
-        z,
-        { ry: Math.PI / 2 }
-      );
-    }
-
-    // Plaster inset panel for variety
-    if (variant === 1) {
-      addMesh(
-        new THREE.BoxGeometry(Math.max(2, w * 0.35), Math.max(2.5, h * 0.35), 0.12),
-        plaster,
-        x,
-        h * 0.55,
-        z + (d / 2 + 0.05) * (z >= 0 ? 1 : -1)
-      );
+      if (variant === 1) {
+        addMesh(
+          new THREE.BoxGeometry(Math.max(2, w * 0.35), Math.max(2.5, h * 0.35), 0.12),
+          plaster,
+          x,
+          h * 0.55,
+          z + (d / 2 + 0.05) * (z >= 0 ? 1 : -1)
+        );
+      }
     }
 
     const box = aabbFromCenter(x, z, w / 2, d / 2);

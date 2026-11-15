@@ -205,9 +205,10 @@ function firePlayer() {
 
 function updateCamera(dt) {
   if (!player) return;
-  const behind = 11;
-  const height = 7.5;
-  const lookAhead = 4;
+  // Slightly closer chase so upgraded tank silhouette reads clearly
+  const behind = 9.2;
+  const height = 6.4;
+  const lookAhead = 3.5;
   const yaw = player.yaw + cameraYawOffset;
 
   const targetX = player.position.x - Math.sin(yaw) * behind;
