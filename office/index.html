@@ -4,95 +4,68 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Agent Office · jamesWH</title>
-  <meta name="description" content="A visual agent office for jamesWH — create custom agents, assign complex tasks, watch them work." />
+  <meta name="description" content="A 3D agent office for jamesWH — hire custom agents, assign complex tasks, watch them work in the loft." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/office.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
 </head>
 <body>
-  <div class="atmosphere" aria-hidden="true">
-    <div class="sky"></div>
-    <div class="window-glow"></div>
-    <div class="dust"></div>
-  </div>
+  <canvas id="office-canvas" aria-label="3D Agent Office loft"></canvas>
 
-  <header class="topbar">
-    <a class="brand-mark" href="#floor" aria-label="Agent Office home">
-      <span class="brand-glyph" aria-hidden="true"></span>
-      <span class="brand-text">Agent Office</span>
-    </a>
-    <nav class="topnav" aria-label="Primary">
-      <button type="button" class="nav-btn" data-open="agents">Agents</button>
-      <button type="button" class="nav-btn" data-open="task">Assign task</button>
-      <button type="button" class="nav-btn ghost" data-open="guide">How it works</button>
-    </nav>
-  </header>
+  <div class="ui-layer">
+    <header class="topbar">
+      <a class="brand-mark" href="#" id="brand-home" aria-label="Agent Office home">
+        <span class="brand-glyph" aria-hidden="true"></span>
+        <span class="brand-text">Agent Office</span>
+      </a>
+      <nav class="topnav" aria-label="Primary">
+        <button type="button" class="nav-btn" data-open="agents">Agents</button>
+        <button type="button" class="nav-btn" data-open="task">Assign task</button>
+        <button type="button" class="nav-btn ghost" data-open="guide">How it works</button>
+      </nav>
+    </header>
 
-  <main>
-    <section class="hero" id="hero">
+    <section class="hero-overlay" id="hero-overlay">
       <div class="hero-copy">
         <p class="eyebrow">jamesWH · personal loft</p>
         <h1 class="brand-hero">Agent Office</h1>
         <p class="lede">
-          A copper-lit loft where your custom agents sit at desks, take complex briefs, and show their work in the room.
+          A copper-lit 3D loft. Hire agents to desks, assign complex briefs, and watch the room work.
         </p>
         <div class="cta-row">
           <button type="button" class="btn primary" data-open="agents">Hire an agent</button>
-          <button type="button" class="btn secondary" data-scroll="floor">Enter the floor</button>
+          <button type="button" class="btn secondary" id="btn-enter">Enter the loft</button>
         </div>
       </div>
-      <div class="hero-stage" aria-hidden="true">
-        <div class="loft-silhouette">
-          <div class="beam"></div>
-          <div class="desk-block d1"></div>
-          <div class="desk-block d2"></div>
-          <div class="lamp"></div>
-        </div>
-      </div>
+      <p class="orbit-hint">Drag to orbit · pinch / scroll to zoom · tap a desk</p>
     </section>
 
-    <section class="floor-section" id="floor" aria-labelledby="floor-title">
-      <div class="section-head">
-        <div>
-          <h2 id="floor-title">The floor</h2>
-          <p>Stations light up when agents are thinking. Click a desk to inspect.</p>
+    <aside class="hud-panel" id="hud-panel">
+      <div class="hud-stats" id="floor-stats" aria-live="polite"></div>
+      <div class="hud-board">
+        <div class="hud-board-head">
+          <h2>Task board</h2>
+          <button type="button" class="btn secondary compact" data-open="task">New</button>
         </div>
-        <div class="floor-stats" id="floor-stats" aria-live="polite"></div>
+        <div class="task-board" id="task-board"></div>
       </div>
+    </aside>
 
-      <div class="office-shell">
-        <div class="office-floor" id="office-floor" role="list" aria-label="Agent stations">
-          <!-- stations rendered by JS -->
-        </div>
-        <aside class="inspector" id="inspector" hidden>
-          <button type="button" class="inspector-close" id="inspector-close" aria-label="Close inspector">×</button>
-          <div id="inspector-body"></div>
-        </aside>
-      </div>
-    </section>
+    <aside class="inspector" id="inspector" hidden>
+      <button type="button" class="inspector-close" id="inspector-close" aria-label="Close inspector">×</button>
+      <div id="inspector-body"></div>
+    </aside>
+  </div>
 
-    <section class="board-section" id="board" aria-labelledby="board-title">
-      <div class="section-head">
-        <div>
-          <h2 id="board-title">Task board</h2>
-          <p>Complex work assigned across one or more agents.</p>
-        </div>
-        <button type="button" class="btn secondary" data-open="task">New task</button>
-      </div>
-      <div class="task-board" id="task-board"></div>
-    </section>
-  </main>
-
-  <footer class="site-foot">
-    <p>
-      Prototype runner with clear hooks for real Cursor / Agent SDK wiring — see
-      <button type="button" class="linkish" data-open="guide">How it works</button>
-      or <a href="README.md">office/README.md</a>.
-    </p>
-  </footer>
-
-  <!-- Panels -->
   <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
 
   <aside class="drawer" id="drawer-agents" hidden aria-labelledby="agents-drawer-title">
@@ -166,12 +139,14 @@
       <button type="button" class="drawer-close" data-close aria-label="Close">×</button>
     </header>
     <div class="drawer-body prose">
+      <h3>3D loft</h3>
+      <p>The room, desks, agents, lamps, and wall board are WebGL meshes (Three.js). HTML overlays handle forms and task status.</p>
       <h3>Add agents</h3>
-      <p>Open <strong>Agents</strong>, fill name, role, and instructions, pick a desk accent, then save. Agents persist in <code>localStorage</code> under <code>agent-office:v1</code>.</p>
+      <p>Open <strong>Agents</strong>, set name, role, and instructions, pick an accent, save. Data lives in <code>localStorage</code> under <code>agent-office:v1</code>. Tap a desk in the scene to inspect.</p>
       <h3>Assign tasks</h3>
-      <p>Open <strong>Assign task</strong>, write a brief, select one or more agents, and start. The prototype runner advances status through queued → researching → drafting → reviewing → done, with progress shown on desks and the task board.</p>
-      <h3>Wire real agents next</h3>
-      <p>Replace the simulated runner in <code>js/runner.js</code>. The <code>AgentRunner</code> interface accepts a task + agent profiles and emits progress events. Point it at Cursor Agent SDK / your backend — see <a href="README.md">office/README.md</a>.</p>
+      <p>Open <strong>Assign task</strong>, write a brief, select agents, start. Lamps glow and agents animate while the simulated runner advances stages on the HUD board.</p>
+      <h3>Wire real agents</h3>
+      <p>Swap <code>createRunner()</code> in <code>js/runner.js</code> for your Cursor / Agent SDK client — see <a href="README.md">office/README.md</a>.</p>
     </div>
   </aside>
 

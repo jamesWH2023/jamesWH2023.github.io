@@ -4,7 +4,7 @@
 
 ## Agent Office
 
-Interactive visual loft for custom agents and complex tasks:
+Interactive **3D** WebGL loft (Three.js) for custom agents and complex tasks:
 
 - Path: [`/office/`](./office/) (GitHub Pages: `/office/`)
 - Docs: [`office/README.md`](./office/README.md)
