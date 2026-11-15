@@ -3,6 +3,7 @@ import { createRunner, TASK_STEPS } from "./runner.js";
 import { OfficeScene } from "./scene.js";
 import { settingsStore, PROVIDER_PRESETS } from "./settings.js";
 import { testProfile } from "./llm.js";
+import { t, applyDomI18n, getLocale, setLocale } from "./i18n.js";
 
 let runner = createRunner();
 const activeRuns = new Map();
@@ -61,16 +62,24 @@ function escapeHtml(str = "") {
 }
 
 function activeModelLabel() {
-  if (!settingsStore.getUseLiveModels()) return "simulated (live models off)";
+  if (!settingsStore.getUseLiveModels()) return t("settings.simulated");
   const p = settingsStore.getActiveProfile();
-  if (!p) return "none";
+  if (!p) return "—";
   return `${p.name} · ${p.model || p.provider}`;
+}
+
+function statusLabel(key) {
+  const k = `status.${key}`;
+  const translated = t(k);
+  return translated === k ? key : translated;
 }
 
 function renderTaskModelHint() {
   const el = $("#task-model-hint");
   if (!el) return;
-  el.innerHTML = `Model: <strong>${escapeHtml(activeModelLabel())}</strong> — change in Settings`;
+  el.innerHTML = t("task.modelHint", {
+    model: `<strong>${escapeHtml(activeModelLabel())}</strong>`,
+  });
 }
 
 function fillAgentForm(agent) {
@@ -79,21 +88,21 @@ function fillAgentForm(agent) {
   $("#agent-role").value = agent?.role || "";
   $("#agent-instructions").value = agent?.instructions || "";
   $("#agent-accent").value = agent?.accent || "copper";
-  $("#agent-submit").textContent = agent?.id ? "Update agent" : "Save agent";
+  $("#agent-submit").textContent = agent?.id ? t("agents.update") : t("agents.save");
 }
 
 function resetAgentForm() {
   fillAgentForm(null);
   $("#agent-form").reset();
   $("#agent-id").value = "";
-  $("#agent-submit").textContent = "Save agent";
+  $("#agent-submit").textContent = t("agents.save");
 }
 
 function renderAgentList() {
   const list = $("#agent-list");
   const agents = store.listAgents();
   if (!agents.length) {
-    list.innerHTML = `<li class="empty-board">No agents yet — hire your first.</li>`;
+    list.innerHTML = `<li class="empty-board">${escapeHtml(t("agents.empty"))}</li>`;
     return;
   }
   list.innerHTML = agents
@@ -103,8 +112,8 @@ function renderAgentList() {
       <div class="name">${escapeHtml(a.name)}</div>
       <div class="meta">${escapeHtml(a.role)}</div>
       <div class="actions">
-        <button type="button" class="btn ghost" data-edit-list="${a.id}">Edit</button>
-        <button type="button" class="btn danger" data-del-list="${a.id}">Remove</button>
+        <button type="button" class="btn ghost" data-edit-list="${a.id}">${escapeHtml(t("agents.edit"))}</button>
+        <button type="button" class="btn danger" data-del-list="${a.id}">${escapeHtml(t("agents.remove"))}</button>
       </div>
     </li>`
     )
@@ -119,9 +128,9 @@ function renderAgentList() {
     btn.addEventListener("click", () => {
       const agent = store.getAgent(btn.dataset.delList);
       if (!agent) return;
-      if (!confirm(`Remove ${agent.name}?`)) return;
+      if (!confirm(t("agents.confirmRemove", { name: agent.name }))) return;
       store.deleteAgent(agent.id);
-      toast(`${agent.name} removed`);
+      toast(t("agents.removed", { name: agent.name }));
       refresh();
       renderAgentList();
     });
@@ -132,7 +141,7 @@ function renderAssigneeChecks() {
   const wrap = $("#assignee-checks");
   const agents = store.listAgents();
   if (!agents.length) {
-    wrap.innerHTML = `<p class="meta">Hire an agent before assigning work.</p>`;
+    wrap.innerHTML = `<p class="meta">${escapeHtml(t("agents.hireFirst"))}</p>`;
     return;
   }
   wrap.innerHTML = agents
@@ -155,14 +164,16 @@ function fillProfileForm(profile) {
   $("#profile-model").value = profile?.model || "";
   const hint = $("#profile-key-hint");
   if (profile?.apiKey) {
-    hint.textContent = `Saved key: ${settingsStore.maskKey(profile.apiKey)} — leave blank to keep`;
+    hint.textContent = t("settings.keySaved", {
+      mask: settingsStore.maskKey(profile.apiKey),
+    });
   } else if (profile?.provider === "mock") {
-    hint.textContent = "Mock profile needs no API key.";
+    hint.textContent = t("settings.keyMock");
   } else {
-    hint.textContent = "No key saved yet.";
+    hint.textContent = t("settings.keyNone");
   }
   $("#profile-test-result").textContent = "";
-  $("#profile-submit").textContent = profile?.id ? "Update profile" : "Save profile";
+  $("#profile-submit").textContent = profile?.id ? t("settings.update") : t("settings.save");
   const needsUrl = profile?.provider !== "mock";
   $("#profile-base-url").disabled = !needsUrl;
   $("#profile-api-key").disabled = profile?.provider === "mock";
@@ -196,10 +207,10 @@ function renderSettings() {
       (p) => `
     <li class="${p.id === s.activeProfileId ? "profile-active" : ""}">
       <div class="name">${escapeHtml(p.name)}</div>
-      <div class="meta">${escapeHtml(p.provider)} · ${escapeHtml(p.model || "—")} · ${p.apiKey || p.provider === "mock" ? "ready" : "no key"}</div>
+      <div class="meta">${escapeHtml(p.provider)} · ${escapeHtml(p.model || "—")} · ${p.apiKey || p.provider === "mock" ? t("settings.ready") : t("settings.noKey")}</div>
       <div class="actions">
-        <button type="button" class="btn ghost" data-edit-profile="${p.id}">Edit</button>
-        <button type="button" class="btn secondary" data-activate-profile="${p.id}">Use</button>
+        <button type="button" class="btn ghost" data-edit-profile="${p.id}">${escapeHtml(t("settings.edit"))}</button>
+        <button type="button" class="btn secondary" data-activate-profile="${p.id}">${escapeHtml(t("settings.use"))}</button>
       </div>
     </li>`
     )
@@ -215,7 +226,7 @@ function renderSettings() {
     btn.addEventListener("click", () => {
       settingsStore.setActiveProfileId(btn.dataset.activateProfile);
       runner = createRunner();
-      toast(`Active model: ${activeModelLabel()}`);
+      toast(t("settings.activeToast", { model: activeModelLabel() }));
       renderSettings();
       refresh();
     });
@@ -229,7 +240,7 @@ function renderBoard() {
   const board = $("#task-board");
   const tasks = store.listTasks();
   if (!tasks.length) {
-    board.innerHTML = `<div class="empty-board">No tasks yet. Assign work to agents in the loft.</div>`;
+    board.innerHTML = `<div class="empty-board">${escapeHtml(t("task.empty"))}</div>`;
     return;
   }
 
@@ -244,9 +255,9 @@ function renderBoard() {
         let cls = "";
         if (idx < cur || task.status === "done") cls = "done";
         if (s === task.step && task.status !== "done") cls = "active";
-        return `<li class="${cls}">${s}</li>`;
+        return `<li class="${cls}">${escapeHtml(statusLabel(s))}</li>`;
       }).join("");
-      const statusLabel =
+      const rawStatus =
         task.status === "done" || task.status === "failed" || task.status === "cancelled"
           ? task.status
           : task.step || task.status;
@@ -255,7 +266,7 @@ function renderBoard() {
       <article class="task-card ${escapeHtml(task.status)}" data-task="${task.id}">
         <h3>${escapeHtml(task.title)}</h3>
         <div class="task-meta">
-          <span>${escapeHtml(statusLabel)}${model}</span>
+          <span>${escapeHtml(statusLabel(rawStatus))}${model}</span>
           <span>${escapeHtml(names)}</span>
         </div>
         <div class="task-progress"><span style="width:${task.progress || 0}%"></span></div>
@@ -278,14 +289,18 @@ function showInspector(agentId) {
     <p class="brief">${escapeHtml(agent.instructions)}</p>
     ${
       busy
-        ? `<p class="meta">Working on <strong>${escapeHtml(busy.title)}</strong> · ${escapeHtml(busy.step)} (${busy.progress}%)</p>`
-        : `<p class="meta">Desk is clear — ready for a brief.</p>`
+        ? `<p class="meta">${t("agents.workingOn", {
+            title: `<strong>${escapeHtml(busy.title)}</strong>`,
+            step: escapeHtml(statusLabel(busy.step)),
+            progress: busy.progress,
+          })}</p>`
+        : `<p class="meta">${escapeHtml(t("agents.deskClear"))}</p>`
     }
-    <p class="meta">Model: ${escapeHtml(activeModelLabel())}</p>
+    <p class="meta">${t("agents.model", { model: escapeHtml(activeModelLabel()) })}</p>
     <div class="row-actions">
-      <button type="button" class="btn secondary" data-edit="${agent.id}">Edit</button>
-      <button type="button" class="btn secondary" data-assign="${agent.id}">Assign task</button>
-      <button type="button" class="btn danger" data-delete="${agent.id}">Remove</button>
+      <button type="button" class="btn secondary" data-edit="${agent.id}">${escapeHtml(t("agents.edit"))}</button>
+      <button type="button" class="btn secondary" data-assign="${agent.id}">${escapeHtml(t("agents.assign"))}</button>
+      <button type="button" class="btn danger" data-delete="${agent.id}">${escapeHtml(t("agents.remove"))}</button>
     </div>
   `;
   panel.hidden = false;
@@ -300,10 +315,10 @@ function showInspector(agentId) {
     if (box) box.checked = true;
   });
   body.querySelector("[data-delete]")?.addEventListener("click", () => {
-    if (!confirm(`Remove ${agent.name} from the office?`)) return;
+    if (!confirm(t("agents.confirmRemoveOffice", { name: agent.name }))) return;
     store.deleteAgent(agent.id);
     panel.hidden = true;
-    toast(`${agent.name} left the loft`);
+    toast(t("agents.left", { name: agent.name }));
     refresh();
   });
 }
@@ -349,10 +364,15 @@ function refresh() {
   const running = store
     .listTasks()
     .filter((t) => t.status === "running" || t.status === "queued").length;
-  $("#floor-stats").innerHTML = `<strong>${agents.length}</strong> agents · <strong>${running}</strong> active · <strong>${escapeHtml(activeModelLabel())}</strong>`;
+  $("#floor-stats").innerHTML = t("hud.stats", {
+    agents: `<strong>${agents.length}</strong>`,
+    running: `<strong>${running}</strong>`,
+    model: `<strong>${escapeHtml(activeModelLabel())}</strong>`,
+  });
   renderBoard();
   office?.syncAgents(agents, busy);
   office?.syncTasks(store.listTasks());
+  office?.setBoardTitle(t("task.boardHeader"));
 }
 
 function tuckHero() {
@@ -360,11 +380,31 @@ function tuckHero() {
   office?.focusLoft();
 }
 
+function applyLocale() {
+  applyDomI18n(document);
+  refresh();
+  if (!$("#drawer-agents").hidden) renderAgentList();
+  if (!$("#drawer-settings").hidden) renderSettings();
+  if (!$("#drawer-task").hidden) {
+    renderAssigneeChecks();
+    renderTaskModelHint();
+  }
+}
+
+function toggleLocale() {
+  setLocale(getLocale() === "zh-CN" ? "en" : "zh-CN");
+  applyLocale();
+}
+
 function bindSettingsUi() {
   $("#settings-use-live")?.addEventListener("change", (e) => {
     settingsStore.setUseLiveModels(e.target.checked);
     runner = createRunner();
-    toast(e.target.checked ? `Live models on · ${activeModelLabel()}` : "Using local simulation");
+    toast(
+      e.target.checked
+        ? t("settings.liveOn", { model: activeModelLabel() })
+        : t("settings.liveOff")
+    );
     refresh();
   });
 
@@ -373,7 +413,7 @@ function bindSettingsUi() {
     runner = createRunner();
     const profile = settingsStore.getActiveProfile();
     fillProfileForm(profile);
-    toast(`Active model: ${activeModelLabel()}`);
+    toast(t("settings.activeToast", { model: activeModelLabel() }));
     renderSettings();
     refresh();
   });
@@ -397,14 +437,14 @@ function bindSettingsUi() {
   $("#profile-delete")?.addEventListener("click", () => {
     const id = $("#profile-id").value;
     if (!id) {
-      toast("Select a saved profile to delete");
+      toast(t("settings.selectDelete"));
       return;
     }
-    if (!confirm("Delete this model profile?")) return;
+    if (!confirm(t("settings.confirmDelete"))) return;
     try {
       settingsStore.deleteProfile(id);
       runner = createRunner();
-      toast("Profile deleted");
+      toast(t("settings.deleted"));
       renderSettings();
       refresh();
     } catch (err) {
@@ -414,7 +454,7 @@ function bindSettingsUi() {
 
   $("#profile-test")?.addEventListener("click", async () => {
     const resultEl = $("#profile-test-result");
-    resultEl.textContent = "Testing…";
+    resultEl.textContent = t("settings.testing");
     const existing = settingsStore.listProfiles().find((p) => p.id === $("#profile-id").value);
     const provider = $("#profile-provider").value;
     const preset = PROVIDER_PRESETS[provider] || PROVIDER_PRESETS.custom;
@@ -430,11 +470,11 @@ function bindSettingsUi() {
     };
     try {
       const res = await testProfile(profile);
-      resultEl.textContent = `OK — ${res.preview}`;
-      toast("Model call succeeded");
+      resultEl.textContent = t("settings.testOk", { preview: res.preview });
+      toast(t("settings.testSuccessToast"));
     } catch (err) {
-      resultEl.textContent = `Failed — ${err.message}`;
-      toast("Model call failed");
+      resultEl.textContent = t("settings.testFail", { error: err.message });
+      toast(t("settings.testFailToast"));
     }
   });
 
@@ -457,7 +497,7 @@ function bindSettingsUi() {
       settingsStore.setActiveProfileId(saved.id);
     }
     runner = createRunner();
-    toast(`Saved ${saved.name}`);
+    toast(t("settings.saved", { name: saved.name }));
     renderSettings();
     refresh();
   });
@@ -477,6 +517,8 @@ function bindUi() {
       $("#inspector").hidden = true;
     }
   });
+
+  $("#btn-lang")?.addEventListener("click", toggleLocale);
 
   $("#btn-enter")?.addEventListener("click", tuckHero);
   $("#brand-home")?.addEventListener("click", (e) => {
@@ -500,7 +542,11 @@ function bindUi() {
       accent: $("#agent-accent").value,
     };
     const saved = store.upsertAgent(payload);
-    toast(payload.id ? `Updated ${saved.name}` : `${saved.name} took a desk`);
+    toast(
+      payload.id
+        ? t("agents.updated", { name: saved.name })
+        : t("agents.hired", { name: saved.name })
+    );
     resetAgentForm();
     refresh();
     renderAgentList();
@@ -513,7 +559,7 @@ function bindUi() {
       (i) => i.value
     );
     if (!agentIds.length) {
-      toast("Select at least one agent");
+      toast(t("task.selectAgent"));
       return;
     }
     const profile = settingsStore.getActiveProfile();
@@ -526,7 +572,7 @@ function bindUi() {
     });
     $("#task-form").reset();
     closeDrawers();
-    toast(`Task “${task.title}” · ${activeModelLabel()}`);
+    toast(t("task.started", { title: task.title, model: activeModelLabel() }));
     startTask(task);
     refresh();
     tuckHero();
@@ -543,6 +589,8 @@ function boot() {
   if (!localStorage.getItem(settingsStore.key)) {
     settingsStore.save(settingsStore.load());
   }
+
+  applyDomI18n(document);
 
   const canvas = $("#office-canvas");
   office = new OfficeScene(canvas, {

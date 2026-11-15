@@ -2,9 +2,9 @@
 
 山水评课 - 高中地理数字课堂评价工具（GitHub Pages 备用入口）
 
-## Agent Office
+## Agent Office / 智能体办公室
 
-Interactive **3D** WebGL loft (Three.js) for custom agents and complex tasks:
+Interactive **3D** WebGL loft (Three.js) for custom agents and complex tasks. UI: **中文 / English** toggle.
 
 - Path: [`/office/`](./office/) (GitHub Pages: `/office/`)
 - Docs: [`office/README.md`](./office/README.md)

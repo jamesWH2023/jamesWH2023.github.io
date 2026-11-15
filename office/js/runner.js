@@ -16,6 +16,7 @@
 
 import { settingsStore } from "./settings.js";
 import { chatCompletion, buildAgentMessages } from "./llm.js";
+import { t } from "./i18n.js";
 
 export const TASK_STEPS = [
   "queued",
@@ -25,13 +26,9 @@ export const TASK_STEPS = [
   "done",
 ];
 
-const STEP_MESSAGES = {
-  queued: "Waiting at the desk…",
-  researching: "Scout notes pinned to the board.",
-  drafting: "First pass taking shape.",
-  reviewing: "Polish pass before handoff.",
-  done: "Work delivered.",
-};
+function stepMessage(step) {
+  return t(`step.${step}`);
+}
 
 /**
  * Simulated multi-agent runner (no network).
@@ -57,7 +54,7 @@ export class SimulatedRunner {
           status: "queued",
           step,
           progress: 0,
-          message: STEP_MESSAGES.queued,
+          message: stepMessage("queued"),
           agentId: assignees[0]?.id,
           modelLabel: "simulated",
         });
@@ -74,7 +71,7 @@ export class SimulatedRunner {
           status,
           step,
           progress,
-          message: `${nameHint}${STEP_MESSAGES[step]}`,
+          message: `${nameHint}${stepMessage(step)}`,
           agentId: agent?.id,
           modelLabel: "simulated",
         });
@@ -90,7 +87,7 @@ export class SimulatedRunner {
           status: "cancelled",
           step: "queued",
           progress: 0,
-          message: "Task cancelled",
+          message: t("runner.cancelled"),
         });
       },
     };
@@ -120,7 +117,7 @@ export class LlmRunner {
         status: "queued",
         step: "queued",
         progress: 0,
-        message: `Queued on ${modelLabel}`,
+        message: t("runner.queuedOn", { model: modelLabel }),
         agentId: assignees[0]?.id,
         modelLabel,
       });
@@ -140,7 +137,11 @@ export class LlmRunner {
           status: "running",
           step,
           progress: Math.max(progress - 10, 5),
-          message: `${agent.name}: calling ${modelLabel} (${step})…`,
+          message: t("runner.calling", {
+            name: agent.name,
+            model: modelLabel,
+            step: t(`status.${step}`),
+          }),
           agentId: agent.id,
           modelLabel,
         });
@@ -163,13 +164,16 @@ export class LlmRunner {
           });
         } catch (err) {
           if (cancelled || err?.name === "AbortError") return;
-          // Soft-fallback for this stage so the office still completes
           onProgress({
             taskId: task.id,
             status: "running",
             step,
             progress,
-            message: `${agent.name}: model error — ${err.message}. Using local note: ${STEP_MESSAGES[step]}`,
+            message: t("runner.error", {
+              name: agent.name,
+              error: err.message,
+              fallback: stepMessage(step),
+            }),
             agentId: agent.id,
             modelLabel,
           });
@@ -182,7 +186,10 @@ export class LlmRunner {
         status: "done",
         step: "done",
         progress: 100,
-        message: `${assignees.at(-1)?.name || "Team"}: Work delivered via ${modelLabel}.`,
+        message: t("runner.delivered", {
+          name: assignees.at(-1)?.name || "Team",
+          model: modelLabel,
+        }),
         agentId: assignees.at(-1)?.id || assignees[0]?.id,
         modelLabel,
       });
@@ -199,7 +206,7 @@ export class LlmRunner {
           status: "cancelled",
           step: "queued",
           progress: 0,
-          message: "Task cancelled",
+          message: t("runner.cancelled"),
         });
       },
     };

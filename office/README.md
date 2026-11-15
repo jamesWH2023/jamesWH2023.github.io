@@ -4,6 +4,16 @@ A WebGL loft for [jamesWH2023.github.io](https://jameswh2023.github.io/) where c
 
 Live path on GitHub Pages: **`/office/`**
 
+## Language / 语言
+
+UI supports **中文 (zh-CN)** and **English (en)** via `js/i18n.js`.
+
+- Default: saved preference, otherwise **zh-CN**
+- Toggle: top-bar **中文 / EN** button (persists in `localStorage` as `agent-office:locale`)
+- Covers nav, hero, drawers (agents / tasks / settings / guide), empty states, toasts, HUD, and 3D wall-board title
+
+默认中文；顶栏可切换英文。偏好保存在本浏览器。
+
 ## Stack
 
 - Plain HTML / CSS / ES modules (no build step)
@@ -85,6 +95,7 @@ export function createRunner() {
 | Path | Role |
 | --- | --- |
 | `js/scene.js` | Three.js room, desks, agents, board |
+| `js/i18n.js` | zh-CN + en strings + locale toggle |
 | `js/settings.js` | Model profiles in localStorage |
 | `js/llm.js` | OpenAI-compatible / Anthropic / mock client |
 | `js/store.js` | Agents + tasks persistence |

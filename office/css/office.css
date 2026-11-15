@@ -143,6 +143,13 @@ a {
   color: var(--slate);
 }
 
+.nav-btn.lang-toggle {
+  min-width: 2.6rem;
+  font-weight: 700;
+  border-color: rgba(181, 106, 58, 0.4);
+  color: var(--copper-bright);
+}
+
 /* Hero overlay — first composition over the 3D room */
 .hero-overlay {
   position: absolute;

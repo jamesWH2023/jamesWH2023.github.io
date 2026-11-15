@@ -410,12 +410,11 @@ function createWallBoard() {
   board.add(frame);
 
   const headerTex = makeLabelTexture("TASK BOARD", { size: 48, bg: "rgba(42,34,28,0.95)", color: "#f0c97a" });
-  const header = new THREE.Mesh(
-    new THREE.PlaneGeometry(2.2, 0.35),
-    new THREE.MeshBasicMaterial({ map: headerTex, transparent: true })
-  );
+  const headerMat = new THREE.MeshBasicMaterial({ map: headerTex, transparent: true });
+  const header = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.35), headerMat);
   header.position.set(-2.4, 3.25, -5.66);
   board.add(header);
+  board.userData.headerMat = headerMat;
 
   const cards = [];
   for (let i = 0; i < 3; i++) {
@@ -666,6 +665,18 @@ export class OfficeScene {
    * Update 3D wall board cards from tasks (newest first, up to 3).
    * @param {object[]} tasks
    */
+  setBoardTitle(title) {
+    const mat = this.wallBoard?.userData?.headerMat;
+    if (!mat) return;
+    if (mat.map) mat.map.dispose();
+    mat.map = makeLabelTexture(title || "TASK BOARD", {
+      size: 48,
+      bg: "rgba(42,34,28,0.95)",
+      color: "#f0c97a",
+    });
+    mat.needsUpdate = true;
+  }
+
   syncTasks(tasks) {
     const cards = this.wallBoard.userData.cards;
     for (let i = 0; i < cards.length; i++) {
