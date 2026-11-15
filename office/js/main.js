@@ -1,8 +1,10 @@
 import { store } from "./store.js";
 import { createRunner, TASK_STEPS } from "./runner.js";
 import { OfficeScene } from "./scene.js";
+import { settingsStore, PROVIDER_PRESETS } from "./settings.js";
+import { testProfile } from "./llm.js";
 
-const runner = createRunner();
+let runner = createRunner();
 const activeRuns = new Map();
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -24,8 +26,12 @@ function openDrawer(name) {
   if (!drawer) return;
   drawer.hidden = false;
   backdrop.hidden = false;
-  if (name === "task") renderAssigneeChecks();
+  if (name === "task") {
+    renderAssigneeChecks();
+    renderTaskModelHint();
+  }
   if (name === "agents") renderAgentList();
+  if (name === "settings") renderSettings();
 }
 
 function closeDrawers() {
@@ -52,6 +58,19 @@ function escapeHtml(str = "") {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+function activeModelLabel() {
+  if (!settingsStore.getUseLiveModels()) return "simulated (live models off)";
+  const p = settingsStore.getActiveProfile();
+  if (!p) return "none";
+  return `${p.name} · ${p.model || p.provider}`;
+}
+
+function renderTaskModelHint() {
+  const el = $("#task-model-hint");
+  if (!el) return;
+  el.innerHTML = `Model: <strong>${escapeHtml(activeModelLabel())}</strong> — change in Settings`;
 }
 
 function fillAgentForm(agent) {
@@ -127,6 +146,85 @@ function renderAssigneeChecks() {
     .join("");
 }
 
+function fillProfileForm(profile) {
+  $("#profile-id").value = profile?.id || "";
+  $("#profile-name").value = profile?.name || "";
+  $("#profile-provider").value = profile?.provider || "custom";
+  $("#profile-base-url").value = profile?.baseUrl || "";
+  $("#profile-api-key").value = "";
+  $("#profile-model").value = profile?.model || "";
+  const hint = $("#profile-key-hint");
+  if (profile?.apiKey) {
+    hint.textContent = `Saved key: ${settingsStore.maskKey(profile.apiKey)} — leave blank to keep`;
+  } else if (profile?.provider === "mock") {
+    hint.textContent = "Mock profile needs no API key.";
+  } else {
+    hint.textContent = "No key saved yet.";
+  }
+  $("#profile-test-result").textContent = "";
+  $("#profile-submit").textContent = profile?.id ? "Update profile" : "Save profile";
+  const needsUrl = profile?.provider !== "mock";
+  $("#profile-base-url").disabled = !needsUrl;
+  $("#profile-api-key").disabled = profile?.provider === "mock";
+}
+
+function applyProviderPreset(provider) {
+  const preset = PROVIDER_PRESETS[provider] || PROVIDER_PRESETS.custom;
+  $("#profile-base-url").value = preset.baseUrl || "";
+  if (!$("#profile-model").value || provider === "mock") {
+    $("#profile-model").value = preset.model || "";
+  }
+  $("#profile-base-url").disabled = provider === "mock";
+  $("#profile-api-key").disabled = provider === "mock";
+}
+
+function renderSettings() {
+  const s = settingsStore.load();
+  $("#settings-use-live").checked = !!s.useLiveModels;
+
+  const activeSel = $("#settings-active");
+  activeSel.innerHTML = s.profiles
+    .map(
+      (p) =>
+        `<option value="${p.id}" ${p.id === s.activeProfileId ? "selected" : ""}>${escapeHtml(p.name)} (${escapeHtml(p.model || p.provider)})</option>`
+    )
+    .join("");
+
+  const list = $("#profile-list");
+  list.innerHTML = s.profiles
+    .map(
+      (p) => `
+    <li class="${p.id === s.activeProfileId ? "profile-active" : ""}">
+      <div class="name">${escapeHtml(p.name)}</div>
+      <div class="meta">${escapeHtml(p.provider)} · ${escapeHtml(p.model || "—")} · ${p.apiKey || p.provider === "mock" ? "ready" : "no key"}</div>
+      <div class="actions">
+        <button type="button" class="btn ghost" data-edit-profile="${p.id}">Edit</button>
+        <button type="button" class="btn secondary" data-activate-profile="${p.id}">Use</button>
+      </div>
+    </li>`
+    )
+    .join("");
+
+  list.querySelectorAll("[data-edit-profile]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const profile = settingsStore.listProfiles().find((p) => p.id === btn.dataset.editProfile);
+      fillProfileForm(profile);
+    });
+  });
+  list.querySelectorAll("[data-activate-profile]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      settingsStore.setActiveProfileId(btn.dataset.activateProfile);
+      runner = createRunner();
+      toast(`Active model: ${activeModelLabel()}`);
+      renderSettings();
+      refresh();
+    });
+  });
+
+  const active = settingsStore.getActiveProfile();
+  fillProfileForm(active);
+}
+
 function renderBoard() {
   const board = $("#task-board");
   const tasks = store.listTasks();
@@ -152,11 +250,12 @@ function renderBoard() {
         task.status === "done" || task.status === "failed" || task.status === "cancelled"
           ? task.status
           : task.step || task.status;
+      const model = task.modelLabel ? ` · ${escapeHtml(task.modelLabel)}` : "";
       return `
       <article class="task-card ${escapeHtml(task.status)}" data-task="${task.id}">
         <h3>${escapeHtml(task.title)}</h3>
         <div class="task-meta">
-          <span>${escapeHtml(statusLabel)}</span>
+          <span>${escapeHtml(statusLabel)}${model}</span>
           <span>${escapeHtml(names)}</span>
         </div>
         <div class="task-progress"><span style="width:${task.progress || 0}%"></span></div>
@@ -182,6 +281,7 @@ function showInspector(agentId) {
         ? `<p class="meta">Working on <strong>${escapeHtml(busy.title)}</strong> · ${escapeHtml(busy.step)} (${busy.progress}%)</p>`
         : `<p class="meta">Desk is clear — ready for a brief.</p>`
     }
+    <p class="meta">Model: ${escapeHtml(activeModelLabel())}</p>
     <div class="row-actions">
       <button type="button" class="btn secondary" data-edit="${agent.id}">Edit</button>
       <button type="button" class="btn secondary" data-assign="${agent.id}">Assign task</button>
@@ -209,11 +309,13 @@ function showInspector(agentId) {
 }
 
 function onProgress(evt) {
-  store.updateTask(evt.taskId, {
+  const patch = {
     status: evt.status,
     step: evt.step,
     progress: evt.progress,
-  });
+  };
+  if (evt.modelLabel) patch.modelLabel = evt.modelLabel;
+  store.updateTask(evt.taskId, patch);
   if (evt.message) store.appendTaskLog(evt.taskId, evt.message);
   if (evt.agentId) {
     const busy = evt.status === "running" || evt.status === "queued";
@@ -247,7 +349,7 @@ function refresh() {
   const running = store
     .listTasks()
     .filter((t) => t.status === "running" || t.status === "queued").length;
-  $("#floor-stats").innerHTML = `<strong>${agents.length}</strong> agents · <strong>${running}</strong> active · drag to orbit`;
+  $("#floor-stats").innerHTML = `<strong>${agents.length}</strong> agents · <strong>${running}</strong> active · <strong>${escapeHtml(activeModelLabel())}</strong>`;
   renderBoard();
   office?.syncAgents(agents, busy);
   office?.syncTasks(store.listTasks());
@@ -256,6 +358,109 @@ function refresh() {
 function tuckHero() {
   $("#hero-overlay")?.classList.add("tucked");
   office?.focusLoft();
+}
+
+function bindSettingsUi() {
+  $("#settings-use-live")?.addEventListener("change", (e) => {
+    settingsStore.setUseLiveModels(e.target.checked);
+    runner = createRunner();
+    toast(e.target.checked ? `Live models on · ${activeModelLabel()}` : "Using local simulation");
+    refresh();
+  });
+
+  $("#settings-active")?.addEventListener("change", (e) => {
+    settingsStore.setActiveProfileId(e.target.value);
+    runner = createRunner();
+    const profile = settingsStore.getActiveProfile();
+    fillProfileForm(profile);
+    toast(`Active model: ${activeModelLabel()}`);
+    renderSettings();
+    refresh();
+  });
+
+  $("#profile-provider")?.addEventListener("change", (e) => {
+    applyProviderPreset(e.target.value);
+  });
+
+  $("#profile-new")?.addEventListener("click", () => {
+    fillProfileForm({
+      id: "",
+      name: "",
+      provider: "custom",
+      baseUrl: PROVIDER_PRESETS.custom.baseUrl,
+      apiKey: "",
+      model: "",
+    });
+    $("#profile-name").focus();
+  });
+
+  $("#profile-delete")?.addEventListener("click", () => {
+    const id = $("#profile-id").value;
+    if (!id) {
+      toast("Select a saved profile to delete");
+      return;
+    }
+    if (!confirm("Delete this model profile?")) return;
+    try {
+      settingsStore.deleteProfile(id);
+      runner = createRunner();
+      toast("Profile deleted");
+      renderSettings();
+      refresh();
+    } catch (err) {
+      toast(err.message);
+    }
+  });
+
+  $("#profile-test")?.addEventListener("click", async () => {
+    const resultEl = $("#profile-test-result");
+    resultEl.textContent = "Testing…";
+    const existing = settingsStore.listProfiles().find((p) => p.id === $("#profile-id").value);
+    const provider = $("#profile-provider").value;
+    const preset = PROVIDER_PRESETS[provider] || PROVIDER_PRESETS.custom;
+    const keyInput = $("#profile-api-key").value;
+    const profile = {
+      id: $("#profile-id").value || "draft",
+      name: $("#profile-name").value || "draft",
+      provider,
+      baseUrl: $("#profile-base-url").value.trim(),
+      apiKey: keyInput || existing?.apiKey || "",
+      model: $("#profile-model").value.trim(),
+      apiStyle: preset.apiStyle,
+    };
+    try {
+      const res = await testProfile(profile);
+      resultEl.textContent = `OK — ${res.preview}`;
+      toast("Model call succeeded");
+    } catch (err) {
+      resultEl.textContent = `Failed — ${err.message}`;
+      toast("Model call failed");
+    }
+  });
+
+  $("#settings-form")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const provider = $("#profile-provider").value;
+    const preset = PROVIDER_PRESETS[provider] || PROVIDER_PRESETS.custom;
+    const existing = settingsStore.listProfiles().find((p) => p.id === $("#profile-id").value);
+    const keyInput = $("#profile-api-key").value;
+    const saved = settingsStore.upsertProfile({
+      id: $("#profile-id").value || undefined,
+      name: $("#profile-name").value,
+      provider,
+      baseUrl: $("#profile-base-url").value,
+      apiKey: keyInput !== "" ? keyInput : existing?.apiKey || "",
+      model: $("#profile-model").value,
+      apiStyle: preset.apiStyle,
+    });
+    if (!$("#profile-id").value) {
+      settingsStore.setActiveProfileId(saved.id);
+    }
+    runner = createRunner();
+    toast(`Saved ${saved.name}`);
+    renderSettings();
+    refresh();
+  });
 }
 
 function bindUi() {
@@ -311,24 +516,32 @@ function bindUi() {
       toast("Select at least one agent");
       return;
     }
+    const profile = settingsStore.getActiveProfile();
     const task = store.createTask({
       title: $("#task-title").value,
       brief: $("#task-brief").value,
       agentIds,
+      modelProfileId: profile?.id || null,
+      modelLabel: activeModelLabel(),
     });
     $("#task-form").reset();
     closeDrawers();
-    toast(`Task “${task.title}” is on the floor`);
+    toast(`Task “${task.title}” · ${activeModelLabel()}`);
     startTask(task);
     refresh();
     tuckHero();
   });
+
+  bindSettingsUi();
 }
 
 function boot() {
   const state = store.load();
   if (!localStorage.getItem(store.key)) {
     store.save(state);
+  }
+  if (!localStorage.getItem(settingsStore.key)) {
+    settingsStore.save(settingsStore.load());
   }
 
   const canvas = $("#office-canvas");

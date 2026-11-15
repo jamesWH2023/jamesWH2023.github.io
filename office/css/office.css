@@ -617,6 +617,67 @@ a {
   border-radius: 3px;
 }
 
+.warn-banner {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(240, 201, 122, 0.45);
+  border-radius: var(--radius);
+  background: rgba(90, 70, 30, 0.35);
+  color: var(--mist);
+  font-size: 0.88rem;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0 0 1rem;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: var(--mist);
+  cursor: pointer;
+}
+
+.toggle-row input {
+  margin-top: 0.25rem;
+}
+
+#drawer-settings > .drawer-body > label {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--mist);
+}
+
+#drawer-settings select,
+#drawer-settings input[type="url"],
+#drawer-settings input[type="password"],
+#drawer-settings input[type="text"] {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(197, 208, 214, 0.2);
+  border-radius: var(--radius);
+  background: rgba(26, 34, 40, 0.65);
+  color: var(--paper);
+}
+
+.field-hint,
+.model-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  color: var(--slate);
+}
+
+.model-hint strong {
+  color: var(--copper-bright);
+}
+
+.profile-active {
+  border-color: rgba(181, 106, 58, 0.55) !important;
+}
+
 .toast-region {
   position: fixed;
   bottom: 1.1rem;

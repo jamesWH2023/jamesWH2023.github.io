@@ -30,6 +30,7 @@
       <nav class="topnav" aria-label="Primary">
         <button type="button" class="nav-btn" data-open="agents">Agents</button>
         <button type="button" class="nav-btn" data-open="task">Assign task</button>
+        <button type="button" class="nav-btn" data-open="settings">Settings</button>
         <button type="button" class="nav-btn ghost" data-open="guide">How it works</button>
       </nav>
     </header>
@@ -126,10 +127,70 @@
           <legend>Assign to</legend>
           <div id="assignee-checks" class="check-grid"></div>
         </fieldset>
+        <p class="model-hint" id="task-model-hint"></p>
         <div class="form-actions">
           <button type="submit" class="btn primary">Start work</button>
         </div>
       </form>
+    </div>
+  </aside>
+
+  <aside class="drawer" id="drawer-settings" hidden aria-labelledby="settings-drawer-title">
+    <header class="drawer-head">
+      <h2 id="settings-drawer-title">Model settings</h2>
+      <button type="button" class="drawer-close" data-close aria-label="Close">×</button>
+    </header>
+    <div class="drawer-body">
+      <p class="warn-banner" role="note">
+        API keys are stored only in this browser’s <code>localStorage</code> (not on a server).
+        Anyone with device access can read them. Prefer scoped keys; clear settings on shared machines.
+      </p>
+      <label class="toggle-row">
+        <input type="checkbox" id="settings-use-live" />
+        <span>Use live / mock models for tasks (off = pure local simulation)</span>
+      </label>
+      <label>
+        Active profile
+        <select id="settings-active"></select>
+      </label>
+      <form id="settings-form" class="stack-form">
+        <input type="hidden" id="profile-id" />
+        <label>
+          Profile name
+          <input type="text" id="profile-name" required maxlength="48" placeholder="Work OpenAI" />
+        </label>
+        <label>
+          Provider
+          <select id="profile-provider">
+            <option value="openai">OpenAI</option>
+            <option value="anthropic">Anthropic</option>
+            <option value="google">Google (OpenAI-compatible)</option>
+            <option value="custom">Custom (OpenAI-compatible)</option>
+            <option value="mock">Mock (offline demo)</option>
+          </select>
+        </label>
+        <label>
+          Base URL
+          <input type="url" id="profile-base-url" maxlength="200" placeholder="https://api.openai.com/v1" />
+        </label>
+        <label>
+          API key
+          <input type="password" id="profile-api-key" maxlength="256" autocomplete="off" placeholder="sk-… (leave blank to keep existing)" />
+        </label>
+        <p class="field-hint" id="profile-key-hint"></p>
+        <label>
+          Model id
+          <input type="text" id="profile-model" required maxlength="100" placeholder="gpt-4o-mini" />
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn primary" id="profile-submit">Save profile</button>
+          <button type="button" class="btn secondary" id="profile-test">Test call</button>
+          <button type="button" class="btn ghost" id="profile-new">New profile</button>
+          <button type="button" class="btn danger" id="profile-delete">Delete</button>
+        </div>
+        <p class="field-hint" id="profile-test-result" aria-live="polite"></p>
+      </form>
+      <ul class="agent-list" id="profile-list"></ul>
     </div>
   </aside>
 
@@ -141,12 +202,14 @@
     <div class="drawer-body prose">
       <h3>3D loft</h3>
       <p>The room, desks, agents, lamps, and wall board are WebGL meshes (Three.js). HTML overlays handle forms and task status.</p>
+      <h3>Model settings</h3>
+      <p>Open <strong>Settings</strong> to add OpenAI-compatible, Anthropic, Google, or custom profiles (base URL + API key + model). Keys stay in <code>localStorage</code>. Mock profile works offline. Active profile drives task stages via <code>LlmRunner</code>.</p>
       <h3>Add agents</h3>
       <p>Open <strong>Agents</strong>, set name, role, and instructions, pick an accent, save. Data lives in <code>localStorage</code> under <code>agent-office:v1</code>. Tap a desk in the scene to inspect.</p>
       <h3>Assign tasks</h3>
-      <p>Open <strong>Assign task</strong>, write a brief, select agents, start. Lamps glow and agents animate while the simulated runner advances stages on the HUD board.</p>
-      <h3>Wire real agents</h3>
-      <p>Swap <code>createRunner()</code> in <code>js/runner.js</code> for your Cursor / Agent SDK client — see <a href="README.md">office/README.md</a>.</p>
+      <p>Open <strong>Assign task</strong>, write a brief, select agents, start. Lamps glow while the active model (or simulation) advances stages on the HUD board.</p>
+      <h3>Wire real Cursor agents</h3>
+      <p><code>createRunner()</code> in <code>js/runner.js</code> still exposes a Cursor SDK stub — see <a href="README.md">office/README.md</a>.</p>
     </div>
   </aside>
 

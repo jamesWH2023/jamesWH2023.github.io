@@ -118,13 +118,15 @@ export const store = {
     return readRaw().tasks.find((t) => t.id === id) || null;
   },
 
-  createTask({ title, brief, agentIds }) {
+  createTask({ title, brief, agentIds, modelProfileId, modelLabel }) {
     const state = readRaw();
     const task = {
       id: uid("task"),
       title: title.trim(),
       brief: brief.trim(),
       agentIds: [...agentIds],
+      modelProfileId: modelProfileId || null,
+      modelLabel: modelLabel || null,
       status: "queued",
       step: "queued",
       progress: 0,
