@@ -46,7 +46,17 @@ Destroy all enemy tanks without losing your own. Buildings block movement and sh
 
 ## Visuals
 
-Tanks use multi-part meshes (tracks/wheels, glacis, faceted turret, muzzle brake). The alley adds sidewalks, lit/dark windows, awnings, dumpsters, barriers, and street-lamp arms — collider footprints stay simple for performance.
+Stylized low-poly WWII-inspired tanks (original geometry, not CAD assets):
+
+| Role | Type | Notes |
+| --- | --- | --- |
+| Player | **M4 Sherman** | Rounded turret, Allied olive |
+| Enemy | **Pz.Kpfw. IV** | Box turret, long barrel |
+| Enemy | **T-34** | Steep glacis, hex turret |
+| Enemy | **Tiger I** | Heavy hull, thick long gun |
+| Enemy | **M3 Stuart** | Light / fast / fragile |
+
+The alley adds sidewalks, lit windows, dumpsters, barriers — collider footprints stay simple for performance.
 
 ## Tech
 

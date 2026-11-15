@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { createAlleyMap } from "./map.js";
-import { Tank } from "./tank.js";
+import { Tank, ENEMY_TYPE_ROTATION } from "./tank.js";
 import { ProjectileManager, spawnExplosion } from "./projectile.js";
 import { EnemyController, buildPatrolAround } from "./enemy.js";
 import { AudioBus } from "./audio.js";
@@ -114,17 +114,18 @@ function startGame() {
     z: spawn.z,
     yaw: spawn.yaw,
     isPlayer: true,
-    maxHealth: 100,
+    typeId: "sherman",
   });
 
   enemies = mapData.enemySpawns.map((s, i) => {
+    const typeId = ENEMY_TYPE_ROTATION[i % ENEMY_TYPE_ROTATION.length];
     const t = new Tank({
       scene,
       x: s.x,
       z: s.z,
       yaw: s.yaw,
       isPlayer: false,
-      maxHealth: 70,
+      typeId,
     });
     const patrol = buildPatrolAround(s.x, s.z, 6 + (i % 3));
     enemyAIs.push(new EnemyController(t, patrol));
@@ -173,6 +174,9 @@ function updateHud() {
     ammoText.textContent = `Reloading ${player.reloadLeft.toFixed(1)}s`;
     ammoText.className = "hud-meta reloading";
   }
+
+  const tankLabel = document.getElementById("tank-type-label");
+  if (tankLabel) tankLabel.textContent = player.displayName;
 
   const alive = enemies.filter((e) => e.alive).length;
   enemyAliveEl.textContent = String(alive);
