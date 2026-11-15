@@ -26,6 +26,17 @@ npx --yes serve -l 5173 tank-alley
 
 On GitHub Pages, open `/tank-alley/` on the published site.
 
+## Desktop shortcut (international icon)
+
+English **Tank Alley** brand mark + install helpers live in [`desktop/`](desktop/).
+
+**Windows (one-click):** open `desktop/`, double-click `create-desktop-shortcut.vbs` → a **Tank Alley** icon appears on your Desktop (starts the local server + browser).
+
+中文：打开 `desktop/`，双击 `create-desktop-shortcut.vbs`，桌面会出现国际风英文图标快捷方式。
+
+Icons: `desktop/icons/tank-alley.ico` (Windows), `tank-alley-256.png` / `512.png`, `tank-alley.svg`.  
+Full steps (Windows / macOS / Linux): see [`desktop/README.md`](desktop/README.md).
+
 ## Controls
 
 | Input | Action |
