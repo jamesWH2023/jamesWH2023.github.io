@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智能体办公室 · jamesWH</title>
+  <meta name="description" content="jamesWH 的三维智能体办公室——雇佣自定义智能体、分配复杂任务、在阁楼中查看进度。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/office.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="office-canvas" data-i18n-aria="canvas.label" aria-label="三维智能体办公室阁楼"></canvas>
+
+  <div class="ui-layer">
+    <header class="topbar">
+      <a class="brand-mark" href="#" id="brand-home" data-i18n-aria="brand.home" aria-label="智能体办公室首页">
+        <span class="brand-glyph" aria-hidden="true"></span>
+        <span class="brand-text" data-i18n="brand.text">智能体办公室</span>
+      </a>
+      <nav class="topnav" aria-label="Primary">
+        <button type="button" class="nav-btn" data-open="agents" data-i18n="nav.agents">智能体</button>
+        <button type="button" class="nav-btn" data-open="task" data-i18n="nav.task">分配任务</button>
+        <button type="button" class="nav-btn" data-open="settings" data-i18n="nav.settings">设置</button>
+        <button type="button" class="nav-btn ghost" data-open="guide" data-i18n="nav.guide">使用说明</button>
+        <button type="button" class="nav-btn lang-toggle" id="btn-lang" data-i18n="nav.lang" data-i18n-title="nav.langTitle" title="切换到英文">EN</button>
+      </nav>
+    </header>
+
+    <section class="hero-overlay" id="hero-overlay">
+      <div class="hero-copy">
+        <p class="eyebrow" data-i18n="hero.eyebrow">jamesWH · 个人阁楼</p>
+        <h1 class="brand-hero" data-i18n="hero.title">智能体办公室</h1>
+        <p class="lede" data-i18n="hero.lede">
+          铜光映照的三维阁楼。把智能体请到工位，下达复杂任务，看着整间办公室运转起来。
+        </p>
+        <div class="cta-row">
+          <button type="button" class="btn primary" data-open="agents" data-i18n="hero.hire">雇佣智能体</button>
+          <button type="button" class="btn secondary" id="btn-enter" data-i18n="hero.enter">进入阁楼</button>
+        </div>
+      </div>
+      <p class="orbit-hint" data-i18n="hero.orbit">拖动环视 · 捏合/滚轮缩放 · 点击工位</p>
+    </section>
+
+    <aside class="hud-panel" id="hud-panel">
+      <div class="hud-stats" id="floor-stats" aria-live="polite"></div>
+      <div class="hud-board">
+        <div class="hud-board-head">
+          <h2 data-i18n="hud.taskBoard">任务看板</h2>
+          <button type="button" class="btn secondary compact" data-open="task" data-i18n="hud.new">新建</button>
+        </div>
+        <div class="task-board" id="task-board"></div>
+      </div>
+    </aside>
+
+    <aside class="inspector" id="inspector" hidden>
+      <button type="button" class="inspector-close" id="inspector-close" data-i18n-aria="close.inspector" aria-label="关闭详情">×</button>
+      <div id="inspector-body"></div>
+    </aside>
+  </div>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <aside class="drawer" id="drawer-agents" hidden aria-labelledby="agents-drawer-title">
+    <header class="drawer-head">
+      <h2 id="agents-drawer-title" data-i18n="agents.title">智能体</h2>
+      <button type="button" class="drawer-close" data-close data-i18n-aria="close" aria-label="关闭">×</button>
+    </header>
+    <div class="drawer-body">
+      <form id="agent-form" class="stack-form">
+        <input type="hidden" id="agent-id" />
+        <label>
+          <span data-i18n="agents.name">名称</span>
+          <input type="text" id="agent-name" name="name" required maxlength="48" data-i18n-placeholder="agents.namePh" placeholder="例如：制图员" />
+        </label>
+        <label>
+          <span data-i18n="agents.role">角色 / 简介</span>
+          <input type="text" id="agent-role" name="role" required maxlength="80" data-i18n-placeholder="agents.rolePh" placeholder="把调研整理成清晰计划" />
+        </label>
+        <label>
+          <span data-i18n="agents.instructions">能力 / 指令</span>
+          <textarea id="agent-instructions" name="instructions" rows="4" required maxlength="1200" data-i18n-placeholder="agents.instructionsPh" placeholder="这位智能体擅长什么、应如何工作…"></textarea>
+        </label>
+        <label>
+          <span data-i18n="agents.accent">工位配色</span>
+          <select id="agent-accent" name="accent">
+            <option value="copper" data-i18n="accent.copper">铜色</option>
+            <option value="verdigris" data-i18n="accent.verdigris">铜绿</option>
+            <option value="slate" data-i18n="accent.slate">石板灰</option>
+            <option value="clay" data-i18n="accent.clay">陶土</option>
+            <option value="ink" data-i18n="accent.ink">墨色</option>
+          </select>
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn primary" id="agent-submit" data-i18n="agents.save">保存智能体</button>
+          <button type="button" class="btn ghost" id="agent-reset" data-i18n="agents.clear">清空表单</button>
+        </div>
+      </form>
+      <ul class="agent-list" id="agent-list"></ul>
+    </div>
+  </aside>
+
+  <aside class="drawer" id="drawer-task" hidden aria-labelledby="task-drawer-title">
+    <header class="drawer-head">
+      <h2 id="task-drawer-title" data-i18n="task.title">分配任务</h2>
+      <button type="button" class="drawer-close" data-close data-i18n-aria="close" aria-label="关闭">×</button>
+    </header>
+    <div class="drawer-body">
+      <form id="task-form" class="stack-form">
+        <label>
+          <span data-i18n="task.titleLabel">标题</span>
+          <input type="text" id="task-title" name="title" required maxlength="100" data-i18n-placeholder="task.titlePh" placeholder="例如：落地页可用性审计" />
+        </label>
+        <label>
+          <span data-i18n="task.brief">任务说明</span>
+          <textarea id="task-brief" name="brief" rows="5" required maxlength="2000" data-i18n-placeholder="task.briefPh" placeholder="描述复杂工作内容，以及怎样算完成…"></textarea>
+        </label>
+        <fieldset class="assignee-field">
+          <legend data-i18n="task.assignTo">指派给</legend>
+          <div id="assignee-checks" class="check-grid"></div>
+        </fieldset>
+        <p class="model-hint" id="task-model-hint"></p>
+        <div class="form-actions">
+          <button type="submit" class="btn primary" data-i18n="task.start">开始工作</button>
+        </div>
+      </form>
+    </div>
+  </aside>
+
+  <aside class="drawer" id="drawer-settings" hidden aria-labelledby="settings-drawer-title">
+    <header class="drawer-head">
+      <h2 id="settings-drawer-title" data-i18n="settings.title">模型设置</h2>
+      <button type="button" class="drawer-close" data-close data-i18n-aria="close" aria-label="关闭">×</button>
+    </header>
+    <div class="drawer-body">
+      <p class="warn-banner" role="note" data-i18n="settings.warn">
+        API 密钥仅保存在本浏览器的 localStorage（不会上传到服务器）。任何能使用本设备的人都能读取。请优先使用权限受限的密钥；共用电脑请清除设置。
+      </p>
+      <label class="toggle-row">
+        <input type="checkbox" id="settings-use-live" />
+        <span data-i18n="settings.useLive">任务使用在线/模拟模型（关闭 = 纯本地模拟）</span>
+      </label>
+      <label>
+        <span data-i18n="settings.active">当前配置</span>
+        <select id="settings-active"></select>
+      </label>
+      <form id="settings-form" class="stack-form">
+        <input type="hidden" id="profile-id" />
+        <label>
+          <span data-i18n="settings.profileName">配置名称</span>
+          <input type="text" id="profile-name" required maxlength="48" data-i18n-placeholder="settings.profileNamePh" placeholder="工作用 OpenAI" />
+        </label>
+        <label>
+          <span data-i18n="settings.provider">服务商</span>
+          <select id="profile-provider">
+            <option value="openai" data-i18n="provider.openai">OpenAI</option>
+            <option value="anthropic" data-i18n="provider.anthropic">Anthropic</option>
+            <option value="google" data-i18n="provider.google">Google（OpenAI 兼容）</option>
+            <option value="custom" data-i18n="provider.custom">自定义（OpenAI 兼容）</option>
+            <option value="mock" data-i18n="provider.mock">模拟（离线演示）</option>
+          </select>
+        </label>
+        <label>
+          <span data-i18n="settings.baseUrl">接口地址</span>
+          <input type="url" id="profile-base-url" maxlength="200" placeholder="https://api.openai.com/v1" />
+        </label>
+        <label>
+          <span data-i18n="settings.apiKey">API 密钥</span>
+          <input type="password" id="profile-api-key" maxlength="256" autocomplete="off" data-i18n-placeholder="settings.apiKeyPh" placeholder="sk-…（留空则保留已有密钥）" />
+        </label>
+        <p class="field-hint" id="profile-key-hint"></p>
+        <label>
+          <span data-i18n="settings.modelId">模型 ID</span>
+          <input type="text" id="profile-model" required maxlength="100" placeholder="gpt-4o-mini" />
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn primary" id="profile-submit" data-i18n="settings.save">保存配置</button>
+          <button type="button" class="btn secondary" id="profile-test" data-i18n="settings.test">测试调用</button>
+          <button type="button" class="btn ghost" id="profile-new" data-i18n="settings.new">新建配置</button>
+          <button type="button" class="btn danger" id="profile-delete" data-i18n="settings.delete">删除</button>
+        </div>
+        <p class="field-hint" id="profile-test-result" aria-live="polite"></p>
+      </form>
+      <ul class="agent-list" id="profile-list"></ul>
+    </div>
+  </aside>
+
+  <aside class="drawer" id="drawer-guide" hidden aria-labelledby="guide-drawer-title">
+    <header class="drawer-head">
+      <h2 id="guide-drawer-title" data-i18n="guide.title">使用说明</h2>
+      <button type="button" class="drawer-close" data-close data-i18n-aria="close" aria-label="关闭">×</button>
+    </header>
+    <div class="drawer-body prose">
+      <h3 data-i18n="guide.loft.h">三维阁楼</h3>
+      <p data-i18n="guide.loft.p">房间、工位、智能体、台灯与墙面看板均为 WebGL 网格（Three.js）。表单与任务状态由 HTML 浮层处理。</p>
+      <h3 data-i18n="guide.settings.h">模型设置</h3>
+      <p data-i18n="guide.settings.p">打开「设置」可添加 OpenAI 兼容、Anthropic、Google 或自定义配置（接口地址 + API 密钥 + 模型）。密钥保存在 localStorage。模拟配置可离线使用。当前配置通过 LlmRunner 驱动任务阶段。</p>
+      <h3 data-i18n="guide.agents.h">添加智能体</h3>
+      <p data-i18n="guide.agents.p">打开「智能体」，填写名称、角色与指令，选择配色后保存。数据保存在 localStorage 的 agent-office:v1。点击场景中的工位可查看详情。</p>
+      <h3 data-i18n="guide.tasks.h">分配任务</h3>
+      <p data-i18n="guide.tasks.p">打开「分配任务」，撰写说明并选择智能体后开始。台灯会亮起，当前模型（或本地模拟）会在看板上推进阶段。</p>
+      <h3 data-i18n="guide.sdk.h">接入真实 Cursor 智能体</h3>
+      <p data-i18n="guide.sdk.p">js/runner.js 中的 createRunner() 仍保留 Cursor SDK 扩展桩——详见 office/README.md。</p>
+      <h3 data-i18n="guide.lang.h">语言</h3>
+      <p data-i18n="guide.lang.p">使用顶栏语言切换在中文与英文之间切换。偏好会保存在本浏览器。</p>
+    </div>
+  </aside>
+
+  <div class="toast-region" id="toasts" aria-live="polite"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
