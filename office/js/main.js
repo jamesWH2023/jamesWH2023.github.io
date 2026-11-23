@@ -155,6 +155,33 @@ function renderAssigneeChecks() {
     .join("");
 }
 
+function syncModelSuggestions(provider, selectedModel) {
+  const preset = PROVIDER_PRESETS[provider] || PROVIDER_PRESETS.custom;
+  const models = Array.isArray(preset.models) ? preset.models : [];
+  const suggest = $("#profile-model-suggest");
+  const list = $("#profile-model-list");
+  const model = selectedModel || $("#profile-model").value || preset.model || "";
+
+  if (suggest) {
+    suggest.innerHTML =
+      `<option value="">${escapeHtml(t("settings.modelCustom"))}</option>` +
+      models
+        .map(
+          (m) =>
+            `<option value="${escapeHtml(m)}" ${m === model ? "selected" : ""}>${escapeHtml(m)}</option>`
+        )
+        .join("");
+    if (models.includes(model)) {
+      suggest.value = model;
+    } else {
+      suggest.value = "";
+    }
+  }
+  if (list) {
+    list.innerHTML = models.map((m) => `<option value="${escapeHtml(m)}"></option>`).join("");
+  }
+}
+
 function fillProfileForm(profile) {
   $("#profile-id").value = profile?.id || "";
   $("#profile-name").value = profile?.name || "";
@@ -162,6 +189,7 @@ function fillProfileForm(profile) {
   $("#profile-base-url").value = profile?.baseUrl || "";
   $("#profile-api-key").value = "";
   $("#profile-model").value = profile?.model || "";
+  syncModelSuggestions(profile?.provider || "custom", profile?.model || "");
   const hint = $("#profile-key-hint");
   if (profile?.apiKey) {
     hint.textContent = t("settings.keySaved", {
@@ -182,11 +210,12 @@ function fillProfileForm(profile) {
 function applyProviderPreset(provider) {
   const preset = PROVIDER_PRESETS[provider] || PROVIDER_PRESETS.custom;
   $("#profile-base-url").value = preset.baseUrl || "";
-  if (!$("#profile-model").value || provider === "mock") {
+  if (!$("#profile-model").value || provider === "mock" || provider === "deepseek") {
     $("#profile-model").value = preset.model || "";
   }
   $("#profile-base-url").disabled = provider === "mock";
   $("#profile-api-key").disabled = provider === "mock";
+  syncModelSuggestions(provider, $("#profile-model").value);
 }
 
 function renderSettings() {
@@ -420,6 +449,13 @@ function bindSettingsUi() {
 
   $("#profile-provider")?.addEventListener("change", (e) => {
     applyProviderPreset(e.target.value);
+  });
+
+  $("#profile-model-suggest")?.addEventListener("change", (e) => {
+    const value = e.target.value;
+    if (value) {
+      $("#profile-model").value = value;
+    }
   });
 
   $("#profile-new")?.addEventListener("click", () => {

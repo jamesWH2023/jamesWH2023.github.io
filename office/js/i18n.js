@@ -84,6 +84,8 @@ const en = {
   "settings.apiKey": "API key",
   "settings.apiKeyPh": "sk-… (leave blank to keep existing)",
   "settings.modelId": "Model id",
+  "settings.modelSuggest": "Suggested models",
+  "settings.modelCustom": "Custom / type below…",
   "settings.save": "Save profile",
   "settings.update": "Update profile",
   "settings.test": "Test call",
@@ -112,6 +114,7 @@ const en = {
   "provider.openai": "OpenAI",
   "provider.anthropic": "Anthropic",
   "provider.google": "Google (OpenAI-compatible)",
+  "provider.deepseek": "DeepSeek",
   "provider.custom": "Custom (OpenAI-compatible)",
   "provider.mock": "Mock (offline demo)",
 
@@ -236,6 +239,8 @@ const zh = {
   "settings.apiKey": "API 密钥",
   "settings.apiKeyPh": "sk-…（留空则保留已有密钥）",
   "settings.modelId": "模型 ID",
+  "settings.modelSuggest": "推荐模型",
+  "settings.modelCustom": "自定义 / 在下方填写…",
   "settings.save": "保存配置",
   "settings.update": "更新配置",
   "settings.test": "测试调用",
@@ -264,6 +269,7 @@ const zh = {
   "provider.openai": "OpenAI",
   "provider.anthropic": "Anthropic",
   "provider.google": "Google（OpenAI 兼容）",
+  "provider.deepseek": "DeepSeek",
   "provider.custom": "自定义（OpenAI 兼容）",
   "provider.mock": "模拟（离线演示）",
 

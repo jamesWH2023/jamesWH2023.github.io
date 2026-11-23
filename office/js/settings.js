@@ -8,32 +8,56 @@ export const PROVIDER_PRESETS = {
     baseUrl: "https://api.openai.com/v1",
     model: "gpt-4o-mini",
     apiStyle: "openai",
+    models: ["gpt-4o-mini", "gpt-4o"],
   },
   anthropic: {
     label: "Anthropic",
     baseUrl: "https://api.anthropic.com",
     model: "claude-3-5-haiku-latest",
     apiStyle: "anthropic",
+    models: ["claude-3-5-haiku-latest", "claude-sonnet-4-5"],
   },
   google: {
     label: "Google (OpenAI-compatible)",
     baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
     model: "gemini-2.0-flash",
     apiStyle: "openai",
+    models: ["gemini-2.0-flash", "gemini-2.5-flash"],
+  },
+  deepseek: {
+    label: "DeepSeek",
+    baseUrl: "https://api.deepseek.com",
+    model: "deepseek-chat",
+    apiStyle: "openai",
+    models: ["deepseek-chat", "deepseek-reasoner"],
   },
   custom: {
     label: "Custom (OpenAI-compatible)",
     baseUrl: "https://api.example.com/v1",
     model: "your-model-id",
     apiStyle: "openai",
+    models: [],
   },
   mock: {
     label: "Mock (offline demo)",
     baseUrl: "",
     model: "mock-demo",
     apiStyle: "mock",
+    models: ["mock-demo"],
   },
 };
+
+export function deepseekDefaultProfile() {
+  return {
+    id: "profile-deepseek",
+    name: "DeepSeek",
+    provider: "deepseek",
+    baseUrl: PROVIDER_PRESETS.deepseek.baseUrl,
+    apiKey: "",
+    model: PROVIDER_PRESETS.deepseek.model,
+    apiStyle: "openai",
+  };
+}
 
 function uid(prefix) {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -80,6 +104,7 @@ function defaultProfiles() {
       model: PROVIDER_PRESETS.google.model,
       apiStyle: "openai",
     },
+    deepseekDefaultProfile(),
   ];
 }
 
@@ -91,17 +116,31 @@ function emptySettings() {
   };
 }
 
+function ensureDeepSeekProfile(settings) {
+  const hasDeepSeek = settings.profiles.some(
+    (p) => p.provider === "deepseek" || p.id === "profile-deepseek"
+  );
+  if (!hasDeepSeek) {
+    settings.profiles.push(deepseekDefaultProfile());
+    return { settings, migrated: true };
+  }
+  return { settings, migrated: false };
+}
+
 function readRaw() {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) return emptySettings();
     const parsed = JSON.parse(raw);
     if (!parsed || !Array.isArray(parsed.profiles)) return emptySettings();
-    return {
+    const merged = {
       ...emptySettings(),
       ...parsed,
       profiles: parsed.profiles,
     };
+    const { settings, migrated } = ensureDeepSeekProfile(merged);
+    if (migrated) writeRaw(settings);
+    return settings;
   } catch {
     return emptySettings();
   }

@@ -165,6 +165,7 @@
             <option value="openai" data-i18n="provider.openai">OpenAI</option>
             <option value="anthropic" data-i18n="provider.anthropic">Anthropic</option>
             <option value="google" data-i18n="provider.google">Google（OpenAI 兼容）</option>
+            <option value="deepseek" data-i18n="provider.deepseek">DeepSeek</option>
             <option value="custom" data-i18n="provider.custom">自定义（OpenAI 兼容）</option>
             <option value="mock" data-i18n="provider.mock">模拟（离线演示）</option>
           </select>
@@ -179,8 +180,13 @@
         </label>
         <p class="field-hint" id="profile-key-hint"></p>
         <label>
+          <span data-i18n="settings.modelSuggest">推荐模型</span>
+          <select id="profile-model-suggest"></select>
+        </label>
+        <label>
           <span data-i18n="settings.modelId">模型 ID</span>
-          <input type="text" id="profile-model" required maxlength="100" placeholder="gpt-4o-mini" />
+          <input type="text" id="profile-model" required maxlength="100" placeholder="gpt-4o-mini" list="profile-model-list" />
+          <datalist id="profile-model-list"></datalist>
         </label>
         <div class="form-actions">
           <button type="submit" class="btn primary" id="profile-submit" data-i18n="settings.save">保存配置</button>

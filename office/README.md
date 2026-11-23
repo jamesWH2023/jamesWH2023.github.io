@@ -44,9 +44,17 @@ Open **Settings** in the nav.
 | --- | --- | --- |
 | OpenAI | OpenAI-compatible | `https://api.openai.com/v1` + model e.g. `gpt-4o-mini` |
 | Google | OpenAI-compatible | Gemini OpenAI endpoint preset |
+| DeepSeek | OpenAI-compatible | First-class preset — see below |
 | Custom | OpenAI-compatible | Any `/chat/completions` host |
 | Anthropic | Native Messages API | Browser may hit CORS; use a gateway base URL if needed |
 | Mock | Offline | No key / network — canned replies for demos |
+
+### DeepSeek setup
+
+1. In Settings, select the **DeepSeek** profile (or provider **DeepSeek** on a new profile).
+2. Base URL defaults to `https://api.deepseek.com` (OpenAI-compatible `/v1/chat/completions` via the client’s `/chat/completions` join).
+3. Pick a suggested model: **`deepseek-chat`** or **`deepseek-reasoner`** (or type another id).
+4. Paste your DeepSeek API key in the key field — it stays in this browser’s `localStorage` only. Never commit keys.
 
 **Security:** API keys are stored only in this browser’s `localStorage` (`agent-office:settings:v1`). There is no server. Prefer scoped keys; clear Settings on shared machines.
 
