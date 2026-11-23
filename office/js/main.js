@@ -215,6 +215,21 @@ function applyProviderPreset(provider) {
   }
   $("#profile-base-url").disabled = provider === "mock";
   $("#profile-api-key").disabled = provider === "mock";
+  const hint = $("#profile-key-hint");
+  if (provider === "mock") {
+    hint.textContent = t("settings.keyMock");
+  } else if (!$("#profile-id").value) {
+    hint.textContent = t("settings.keyNone");
+  } else {
+    const existing = settingsStore.listProfiles().find((p) => p.id === $("#profile-id").value);
+    if (existing?.apiKey) {
+      hint.textContent = t("settings.keySaved", {
+        mask: settingsStore.maskKey(existing.apiKey),
+      });
+    } else {
+      hint.textContent = t("settings.keyNone");
+    }
+  }
   syncModelSuggestions(provider, $("#profile-model").value);
 }
 
