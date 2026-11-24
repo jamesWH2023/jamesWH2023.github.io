@@ -29,6 +29,19 @@ npm start
 # → http://localhost:5184
 ```
 
+### Desktop shortcut（一键启动）
+
+**macOS**
+
+1. 在 Finder 中打开 `office/`，双击 **`install-desktop-shortcut.command`**（若提示安全限制：右键 → 打开）。
+2. 桌面会出现 **`启动智能体办公室.command`**，之后双击即可启动并打开浏览器。
+
+也可直接双击 `office/start-office.command`。
+
+**Windows**
+
+双击 `office/start-office.bat`，或将其发送到桌面快捷方式。
+
 ## Model settings
 
 Open **Settings** in the nav.
