@@ -191,12 +191,12 @@ function createDeskStation(index) {
   group.add(lampArm);
   const shade = new THREE.Mesh(
     new THREE.ConeGeometry(0.12, 0.14, 12, 1, true),
-    mat(0xc47a3a, { roughness: 0.45, metalness: 0.35, emissive: 0xf0c97a, emissiveIntensity: 0.15 })
+    mat(0xc47a3a, { roughness: 0.45, metalness: 0.35, emissive: 0xf0c97a, emissiveIntensity: 0.28 })
   );
   shade.position.set(0.62, 1.12, -0.18);
   shade.rotation.z = Math.PI;
   group.add(shade);
-  const bulb = new THREE.PointLight(0xf0c97a, 0.15, 4, 2);
+  const bulb = new THREE.PointLight(0xf0c97a, 0.35, 4.5, 2);
   bulb.position.set(0.58, 1.05, -0.12);
   group.add(bulb);
   group.userData.lamp = bulb;
@@ -260,21 +260,21 @@ function createRoom(scene) {
   const room = new THREE.Group();
   room.name = "room";
 
-  const floorMat = mat(0x6a5545, { roughness: 0.9, metalness: 0.02 });
+  const floorMat = mat(0x8a7360, { roughness: 0.88, metalness: 0.02 });
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(16, 12), floorMat);
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   room.add(floor);
 
   // Subtle floor planks via thin strips
-  const plankMat = mat(0x5a4638, { roughness: 0.92 });
+  const plankMat = mat(0x7a6352, { roughness: 0.9 });
   for (let i = -7; i <= 7; i++) {
     const plank = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.01, 11.5), plankMat);
     plank.position.set(i * 1.05, 0.005, 0);
     room.add(plank);
   }
 
-  const wallMat = mat(0x2f3d46, { roughness: 0.88 });
+  const wallMat = mat(0x4a5c66, { roughness: 0.86 });
   const back = new THREE.Mesh(new THREE.PlaneGeometry(16, 5.2), wallMat);
   back.position.set(0, 2.6, -5.8);
   back.receiveShadow = true;
@@ -310,17 +310,17 @@ function createRoom(scene) {
   mullionH.position.set(2.2, 2.7, -5.7);
   room.add(mullionH);
   const skyMat = new THREE.MeshStandardMaterial({
-    color: 0xb9d0de,
-    emissive: 0xf2d7a4,
-    emissiveIntensity: 0.55,
-    roughness: 0.85,
+    color: 0xd4e6f2,
+    emissive: 0xffe8c4,
+    emissiveIntensity: 1.05,
+    roughness: 0.8,
     metalness: 0,
   });
   const glass = new THREE.Mesh(new THREE.PlaneGeometry(4.7, 2.35), skyMat);
   glass.position.set(2.2, 2.7, -5.68);
   room.add(glass);
 
-  const warm = new THREE.SpotLight(0xffe0b0, 28, 28, Math.PI / 4.5, 0.45, 1.2);
+  const warm = new THREE.SpotLight(0xffecc8, 42, 30, Math.PI / 4.2, 0.4, 1.05);
   warm.position.set(2.2, 3.8, -4.2);
   warm.target.position.set(1.5, 0.5, 0);
   warm.castShadow = true;
@@ -328,14 +328,19 @@ function createRoom(scene) {
   room.add(warm);
   room.add(warm.target);
 
+  // Soft bounce from the bright window
+  const windowFill = new THREE.PointLight(0xfff0d8, 8, 14, 1.6);
+  windowFill.position.set(2.2, 2.6, -4.0);
+  room.add(windowFill);
+
   // Side window
   const glass2 = new THREE.Mesh(
     new THREE.PlaneGeometry(2.2, 2.0),
     new THREE.MeshStandardMaterial({
-      color: 0xb8d0dc,
-      emissive: 0xd8e8f0,
-      emissiveIntensity: 0.4,
-      roughness: 0.9,
+      color: 0xd0e4f0,
+      emissive: 0xe8f2f8,
+      emissiveIntensity: 0.75,
+      roughness: 0.88,
       metalness: 0,
     })
   );
@@ -344,7 +349,7 @@ function createRoom(scene) {
   room.add(glass2);
 
   // Rug
-  const rug = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.03, 3.2), mat(0x3d4f4a, { roughness: 1 }));
+  const rug = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.03, 3.2), mat(0x4f6860, { roughness: 1 }));
   rug.position.set(0, 0.02, 0.6);
   rug.receiveShadow = true;
   room.add(rug);
@@ -473,11 +478,11 @@ export class OfficeScene {
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 1.35;
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x152028);
-    this.scene.fog = new THREE.Fog(0x152028, 14, 32);
+    this.scene.background = new THREE.Color(0x2a3a44);
+    this.scene.fog = new THREE.Fog(0x2a3a44, 18, 38);
 
     this.camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 80);
     this.camera.position.set(6.8, 4.6, 9.2);
@@ -498,13 +503,16 @@ export class OfficeScene {
       this.controls.autoRotate = false;
     });
 
-    // Lights
-    const hemi = new THREE.HemisphereLight(0xd8e6f0, 0x3a2e24, 0.55);
+    // Lights — bright daylight loft
+    const hemi = new THREE.HemisphereLight(0xf0f5f8, 0x6a5648, 1.15);
     this.scene.add(hemi);
-    const fill = new THREE.DirectionalLight(0xb8c8d4, 0.55);
+    const fill = new THREE.DirectionalLight(0xe8f0f6, 1.05);
     fill.position.set(-6, 8, 4);
     this.scene.add(fill);
-    const ambient = new THREE.AmbientLight(0x6a7882, 0.28);
+    const key = new THREE.DirectionalLight(0xfff2dc, 0.65);
+    key.position.set(5, 7, 3);
+    this.scene.add(key);
+    const ambient = new THREE.AmbientLight(0xc5d0d8, 0.55);
     this.scene.add(ambient);
 
     createRoom(this.scene);
@@ -652,11 +660,11 @@ export class OfficeScene {
     const lamp = desk.userData.lamp;
     const shade = desk.userData.shadeMat;
     const screen = desk.userData.screenMat;
-    if (lamp) lamp.intensity = busy ? 1.35 : 0.18;
-    if (shade) shade.emissiveIntensity = busy ? 0.85 : 0.12;
+    if (lamp) lamp.intensity = busy ? 1.55 : 0.4;
+    if (shade) shade.emissiveIntensity = busy ? 0.95 : 0.28;
     if (screen) {
-      screen.emissiveIntensity = busy ? 0.7 : 0.2;
-      screen.emissive = new THREE.Color(busy ? 0x3d8f7a : 0x1e3a48);
+      screen.emissiveIntensity = busy ? 0.85 : 0.35;
+      screen.emissive = new THREE.Color(busy ? 0x3d8f7a : 0x2a4a58);
     }
     desk.userData.progress = progress;
   }
@@ -732,8 +740,8 @@ export class OfficeScene {
       }
     }
 
-    // Soft window shimmer via exposure
-    this.renderer.toneMappingExposure = 1.0 + Math.sin(t * 0.35) * 0.04;
+    // Soft window shimmer via exposure (brighter baseline)
+    this.renderer.toneMappingExposure = 1.32 + Math.sin(t * 0.35) * 0.05;
     this.renderer.render(this.scene, this.camera);
   };
 }
