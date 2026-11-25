@@ -31,16 +31,29 @@ npm start
 
 ### Desktop shortcut（一键启动）
 
+启动脚本会在本地服务就绪后自动用系统默认浏览器打开 **http://localhost:5184**。
+
 **macOS**
 
-1. 在 Finder 中打开 `office/`，双击 **`install-desktop-shortcut.command`**（若提示安全限制：右键 → 打开）。
-2. 桌面会出现 **`启动智能体办公室.command`**，之后双击即可启动并打开浏览器。
+1. 先拉取最新分支，再在 Finder 打开 `office/`，双击 **`install-desktop-shortcut.command`**（若提示安全限制：右键 → 打开）。
+2. 桌面会出现 **`启动智能体办公室.command`**，之后双击即可启动；终端窗口需保持打开。
+3. 若被 Gatekeeper 拦截：右键快捷方式 → **打开**；或在终端执行：
+   ```bash
+   xattr -cr office/start-office.command office/install-desktop-shortcut.command
+   chmod +x office/start-office.command office/install-desktop-shortcut.command
+   ```
 
 也可直接双击 `office/start-office.command`。
 
 **Windows**
 
-双击 `office/start-office.bat`，或将其发送到桌面快捷方式。
+双击 `office/start-office.bat`，或右键 → 发送到 → 桌面快捷方式。
+
+**浏览器仍未打开时**
+
+1. 确认终端/命令行窗口仍在运行（不要关掉）。
+2. 手动在浏览器打开：http://localhost:5184  
+3. 若提示找不到 npm：安装 [Node.js](https://nodejs.org) 后重试。
 
 ## Model settings
 
