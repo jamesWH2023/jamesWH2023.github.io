@@ -21,7 +21,6 @@ function mat(color, opts = {}) {
     emissiveIntensity: opts.emissiveIntensity ?? 0,
     transparent: opts.transparent ?? false,
     opacity: opts.opacity ?? 1,
-    flatShading: opts.flatShading ?? false,
   });
 }
 
@@ -94,8 +93,8 @@ function createAgentFigure(accentHex) {
   const root = new THREE.Group();
   root.name = "agentFigure";
 
-  const jacket = mat(accentHex, { roughness: 0.5, metalness: 0.14, flatShading: true });
-  const pants = mat(0x2c3640, { roughness: 0.82, flatShading: true });
+  const jacket = mat(accentHex, { roughness: 0.5, metalness: 0.14 });
+  const pants = mat(0x2c3640, { roughness: 0.82 });
   const skin = mat(0xd8b89a, { roughness: 0.88 });
   const hairMat = mat(0x1e262c, { roughness: 0.7 });
   const shirt = mat(0xe8eef1, { roughness: 0.75 });
@@ -243,24 +242,23 @@ function createDeskStation(index) {
   pad.position.set(0.22, 0.8, 0.14);
   group.add(pad);
 
-  // Gooseneck desk lamp
+  // Desk lamp — emissive shade only (no per-desk PointLight; too many lights blank WebGL on some GPUs)
   const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.035, 14), chrome);
   lampBase.position.set(0.58, 0.8, -0.18);
   group.add(lampBase);
-  const goose = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.018, 8, 16, Math.PI * 1.1), chrome);
-  goose.position.set(0.58, 0.98, -0.18);
-  goose.rotation.set(0, 0, Math.PI * 0.55);
-  group.add(goose);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.32, 8), chrome);
+  stem.position.set(0.52, 0.96, -0.14);
+  stem.rotation.z = 0.55;
+  group.add(stem);
   const shade = new THREE.Mesh(
-    new THREE.SphereGeometry(0.09, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.55),
-    mat(0xd4924a, { roughness: 0.4, metalness: 0.35, emissive: 0xffd090, emissiveIntensity: 0.35 })
+    new THREE.ConeGeometry(0.1, 0.12, 12, 1, true),
+    mat(0xd4924a, { roughness: 0.4, metalness: 0.35, emissive: 0xffd090, emissiveIntensity: 0.45 })
   );
-  shade.position.set(0.42, 1.08, -0.1);
-  shade.rotation.x = Math.PI;
+  shade.position.set(0.42, 1.1, -0.08);
+  shade.rotation.z = Math.PI;
   group.add(shade);
-  const bulb = new THREE.PointLight(0xffd090, 0.45, 5, 2);
-  bulb.position.set(0.42, 1.02, -0.05);
-  group.add(bulb);
+  // Lightweight stub so busy animation can still "pulse" intensity metadata
+  const bulb = { intensity: 0.45 };
   group.userData.lamp = bulb;
   group.userData.shadeMat = shade.material;
 
@@ -304,12 +302,12 @@ function createDeskStation(index) {
   }
   group.add(chair);
 
-  // Hire ring (empty desk marker) — hexagonal
+  // Hire ring (empty desk marker)
   const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(0.32, 0.018, 6, 6),
+    new THREE.RingGeometry(0.28, 0.34, 32),
     mat(0xb56a3a, { roughness: 0.35, metalness: 0.4, emissive: 0xb56a3a, emissiveIntensity: 0.35 })
   );
-  ring.rotation.x = Math.PI / 2;
+  ring.rotation.x = -Math.PI / 2;
   ring.position.set(0, 0.8, 0.08);
   ring.visible = false;
   group.add(ring);
@@ -413,9 +411,7 @@ function createRoom(scene) {
   skyStrip.rotation.x = Math.PI / 2;
   skyStrip.position.set(3.2, 5.12, -1.5);
   room.add(skyStrip);
-  const skyLight = new THREE.PointLight(0xfff0d0, 10, 16, 1.5);
-  skyLight.position.set(3.2, 4.6, -1.5);
-  room.add(skyLight);
+  // Skylight fill kept as a single soft point (budget lights carefully for WebGL)
 
   // Bay window wall (3 panes)
   const bayZ = -5.92;
@@ -451,8 +447,8 @@ function createRoom(scene) {
   warm.shadow.mapSize.set(1024, 1024);
   room.add(warm, warm.target);
 
-  const windowFill = new THREE.PointLight(0xfff2dc, 12, 15, 1.5);
-  windowFill.position.set(2.6, 2.8, -4.2);
+  const windowFill = new THREE.PointLight(0xfff2dc, 14, 16, 1.4);
+  windowFill.position.set(2.6, 2.9, -4.0);
   room.add(windowFill);
 
   // Side clerestory
@@ -469,21 +465,21 @@ function createRoom(scene) {
   sideGlass.position.set(-8.14, 3.6, -0.8);
   room.add(sideGlass);
 
-  // Pendant lamps over lounge
+  // Pendant lamps over lounge (emissive shades + one shared point light)
   for (const x of [-2.4, -1.2]) {
     const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 1.1, 6), mat(0x1a2228));
     cord.position.set(x, 4.4, 2.6);
     room.add(cord);
     const shade = new THREE.Mesh(
       new THREE.ConeGeometry(0.22, 0.28, 16, 1, true),
-      mat(0xc47a3a, { roughness: 0.45, metalness: 0.2, emissive: 0xf0c97a, emissiveIntensity: 0.45 })
+      mat(0xc47a3a, { roughness: 0.45, metalness: 0.2, emissive: 0xf0c97a, emissiveIntensity: 0.55 })
     );
     shade.position.set(x, 3.75, 2.6);
     room.add(shade);
-    const pl = new THREE.PointLight(0xffd8a0, 3.5, 7, 2);
-    pl.position.set(x, 3.55, 2.6);
-    room.add(pl);
   }
+  const loungeLight = new THREE.PointLight(0xffd8a0, 5, 9, 2);
+  loungeLight.position.set(-1.8, 3.5, 2.6);
+  room.add(loungeLight);
 
   // Area rug (rounded via overlapping discs approx with box + border)
   const rug = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.025, 2.6), mat(0x4a6860, { roughness: 1 }));
@@ -550,7 +546,7 @@ function createRoom(scene) {
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 0.9, 8), timberDark);
   trunk.position.set(6.6, 0.75, -4.9);
   room.add(trunk);
-  const leafMat = mat(0x3f8a5a, { roughness: 0.7, flatShading: true });
+  const leafMat = mat(0x3f8a5a, { roughness: 0.7 });
   for (let i = 0; i < 7; i++) {
     const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), leafMat);
     const a = (i / 7) * Math.PI * 2;
@@ -569,13 +565,10 @@ function createRoom(scene) {
   room.add(flPole);
   const flShade = new THREE.Mesh(
     new THREE.CylinderGeometry(0.22, 0.28, 0.35, 16, 1, true),
-    mat(0xe8dcc8, { roughness: 0.85, emissive: 0xffe8c0, emissiveIntensity: 0.25 })
+    mat(0xe8dcc8, { roughness: 0.85, emissive: 0xffe8c0, emissiveIntensity: 0.55 })
   );
   flShade.position.set(6.8, 1.85, 2.2);
   room.add(flShade);
-  const flLight = new THREE.PointLight(0xffe8c8, 4, 8, 2);
-  flLight.position.set(6.8, 1.7, 2.2);
-  room.add(flLight);
 
   scene.add(room);
   return { room, warm };
@@ -858,7 +851,7 @@ export class OfficeScene {
     const shade = desk.userData.shadeMat;
     const screen = desk.userData.screenMat;
     if (lamp) lamp.intensity = busy ? 1.65 : 0.45;
-    if (shade) shade.emissiveIntensity = busy ? 1.0 : 0.35;
+    if (shade) shade.emissiveIntensity = busy ? 1.15 : 0.45;
     if (screen) {
       screen.emissiveIntensity = busy ? 0.95 : 0.4;
       screen.emissive = new THREE.Color(busy ? 0x3d9a82 : 0x2a5568);
@@ -918,7 +911,10 @@ export class OfficeScene {
           fig.userData.head.position.y = 1.18 + Math.sin(t * 2.2) * 0.012;
         }
         const lamp = desk.userData.lamp;
-        if (lamp) lamp.intensity = 1.2 + Math.sin(t * 3.5) * 0.28;
+        const shade = desk.userData.shadeMat;
+        const pulse = 1.15 + Math.sin(t * 3.5) * 0.2;
+        if (lamp) lamp.intensity = pulse;
+        if (shade) shade.emissiveIntensity = pulse;
       }
       const plate = desk.userData.nameplate;
       if (plate?.visible) {

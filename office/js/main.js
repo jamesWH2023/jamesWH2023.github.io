@@ -632,6 +632,21 @@ function bindUi() {
   bindSettingsUi();
 }
 
+function showBootError(err) {
+  console.error("[Agent Office] boot failed", err);
+  const box = document.createElement("div");
+  box.setAttribute("role", "alert");
+  box.style.cssText =
+    "position:fixed;inset:12px;z-index:9999;max-width:560px;margin:auto;padding:1rem 1.2rem;" +
+    "background:#1a2228;color:#e8eef1;border:1px solid #b56a3a;border-radius:8px;" +
+    "font:14px/1.5 system-ui,sans-serif;white-space:pre-wrap;";
+  box.textContent =
+    "智能体办公室启动失败 / Boot failed\n\n" +
+    String(err?.message || err) +
+    "\n\n请硬刷新，或打开开发者工具查看控制台。";
+  document.body.appendChild(box);
+}
+
 function boot() {
   const state = store.load();
   if (!localStorage.getItem(store.key)) {
@@ -644,6 +659,8 @@ function boot() {
   applyDomI18n(document);
 
   const canvas = $("#office-canvas");
+  if (!canvas) throw new Error("Missing #office-canvas");
+
   office = new OfficeScene(canvas, {
     onSelectDesk(_idx, agentId) {
       showInspector(agentId);
@@ -664,4 +681,8 @@ function boot() {
   resumeRunningTasks();
 }
 
-boot();
+try {
+  boot();
+} catch (err) {
+  showBootError(err);
+}
