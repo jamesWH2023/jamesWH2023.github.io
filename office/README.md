@@ -26,18 +26,18 @@ UI supports **中文 (zh-CN)** and **English (en)** via `js/i18n.js`.
 ```bash
 cd office
 npm start
-# → http://localhost:5184
+# → http://127.0.0.1:5184
 ```
 
 ### Desktop shortcut（一键启动）
 
-启动脚本会在本地服务就绪后自动用系统默认浏览器打开 **http://localhost:5184**。
+启动脚本会在服务就绪后自动打开 **http://127.0.0.1:5184**（比 `localhost` 更稳，可避免 IPv6 连不上）。
 
 **macOS**
 
-1. 先拉取最新分支，再在 Finder 打开 `office/`，双击 **`install-desktop-shortcut.command`**（若提示安全限制：右键 → 打开）。
-2. 桌面会出现 **`启动智能体办公室.command`**，之后双击即可启动；终端窗口需保持打开。
-3. 若被 Gatekeeper 拦截：右键快捷方式 → **打开**；或在终端执行：
+1. 拉取最新分支后，在 Finder 打开 `office/`，双击 **`install-desktop-shortcut.command`**（若提示安全限制：右键 → 打开）。
+2. 桌面会出现 **`启动智能体办公室.command`**；双击后**保持终端窗口不要关**。
+3. 若被 Gatekeeper 拦截：右键快捷方式 → **打开**；或：
    ```bash
    xattr -cr office/start-office.command office/install-desktop-shortcut.command
    chmod +x office/start-office.command office/install-desktop-shortcut.command
@@ -49,11 +49,16 @@ npm start
 
 双击 `office/start-office.bat`，或右键 → 发送到 → 桌面快捷方式。
 
-**浏览器仍未打开时**
+**无法打开网页时（请按顺序试）**
 
-1. 确认终端/命令行窗口仍在运行（不要关掉）。
-2. 手动在浏览器打开：http://localhost:5184  
-3. 若提示找不到 npm：安装 [Node.js](https://nodejs.org) 后重试。
+1. 确认黑色/白色终端窗口仍在运行（关掉等于关站）。
+2. 在 Chrome / Safari 地址栏**手动粘贴**：http://127.0.0.1:5184  
+3. 终端执行：
+   ```bash
+   cd office && npm start
+   ```
+   看到 `Accepting connections` 后再打开上面的地址。
+4. 若提示找不到 npm：安装 [Node.js](https://nodejs.org) 后重试。
 
 ## Model settings
 
