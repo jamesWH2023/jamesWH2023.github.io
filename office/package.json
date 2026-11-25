@@ -1,0 +1,10 @@
+{
+  "name": "agent-office",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Visual agent office for jamesWH2023.github.io",
+  "scripts": {
+    "start": "npx --yes serve -n -l tcp://127.0.0.1:5184 .",
+    "serve": "npx --yes serve -n -l tcp://127.0.0.1:5184 ."
+  }
+}
