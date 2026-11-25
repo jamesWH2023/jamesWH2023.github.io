@@ -29,25 +29,37 @@ npm start
 # → http://127.0.0.1:5184
 ```
 
-### Desktop shortcut（一键启动）
+### Desktop shortcut（一键启动 + 图标）
 
 启动脚本会在服务就绪后自动打开 **http://127.0.0.1:5184**（比 `localhost` 更稳，可避免 IPv6 连不上）。
 
+图标资源：`office/assets/app-icon.png`、`AppIcon.icns`（macOS）、`app-icon.ico`（Windows）。
+
 **macOS**
 
-1. 拉取最新分支后，在 Finder 打开 `office/`，双击 **`install-desktop-shortcut.command`**（若提示安全限制：右键 → 打开）。
-2. 桌面会出现 **`启动智能体办公室.command`**；双击后**保持终端窗口不要关**。
-3. 若被 Gatekeeper 拦截：右键快捷方式 → **打开**；或：
+1. 拉取最新分支：
+   ```bash
+   git pull origin cursor/agent-office-c372
+   cd office
+   ```
+2. 在 Finder 打开 `office/`，双击 **`install-desktop-shortcut.command`**（若提示安全限制：右键 → **打开**）。
+3. 桌面会出现带自定义图标的 **`启动智能体办公室.app`**（不是灰色 Terminal 图标）。
+4. 双击该 `.app`；保持随后打开的终端窗口不要关。
+5. 若 Gatekeeper 拦截安装脚本：
    ```bash
    xattr -cr office/start-office.command office/install-desktop-shortcut.command
    chmod +x office/start-office.command office/install-desktop-shortcut.command
    ```
 
-也可直接双击 `office/start-office.command`。
+也可直接双击 `office/start-office.command`（无自定义桌面图标）。
 
 **Windows**
 
-双击 `office/start-office.bat`，或右键 → 发送到 → 桌面快捷方式。
+1. `git pull` 后进入 `office/`。
+2. 双击 **`install-desktop-shortcut.bat`**。
+3. 桌面会出现带图标的 **`启动智能体办公室.lnk`**；双击启动，保持控制台窗口打开。
+
+也可直接双击 `office/start-office.bat`。
 
 **无法打开网页时（请按顺序试）**
 
